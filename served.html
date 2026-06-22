@@ -380,22 +380,25 @@
     }
 
     .message-content {
-      max-width: 20rem;
+      max-width: min(90%, 48rem);
       padding: 0.75rem;
       border-radius: 0.5rem;
       font-size: 0.875rem;
       word-wrap: break-word;
       white-space: pre-wrap;
+      line-height: 1.5;
     }
 
     .message.assistant .message-content {
       background: #374151;
       color: #d1d5db;
+      border-top-left-radius: 0.125rem;
     }
 
     .message.user .message-content {
       background: #2563eb;
       color: white;
+      border-top-right-radius: 0.125rem;
     }
 
     .message-actions {
@@ -548,7 +551,7 @@
       }
 
       .message-content {
-        max-width: 15rem;
+        max-width: 90%;
       }
 
       .chat-list {
@@ -568,7 +571,6 @@
       </div>
 
       <div class="sidebar-content">
-        <!-- Chats Section -->
         <div class="section">
           <div class="section-header">
             <span>Chats</span>
@@ -577,7 +579,6 @@
           <div class="chat-list" id="chatList"></div>
         </div>
 
-        <!-- Prompts Section -->
         <div class="section flex-grow prompts-section">
           <div class="section-header">
             <span>Prompts</span>
@@ -595,7 +596,7 @@
       </div>
 
       <div class="sidebar-actions">
-        <button id="exportBtn" style="display: none;">📥 Export</button>
+        <button id="exportBtn">📥 Export</button>
         <label>
           📤 Import
           <input type="file" accept=".json" id="importBtn" style="display: none;">
@@ -633,13 +634,11 @@
   </div>
 
   <script>
-    // State
     let chats = [];
     let currentChatId = null;
     let prompts = [];
     let selectedPromptIds = new Set();
 
-    // DOM Elements
     const sidebar = document.getElementById('sidebar');
     const sidebarOverlay = document.getElementById('sidebarOverlay');
     const menuBtn = document.getElementById('menuBtn');
@@ -660,15 +659,17 @@
     const importBtn = document.getElementById('importBtn');
     const inputForm = document.getElementById('inputForm');
 
-    // Load data from localStorage
     function loadData() {
-      const savedChats = localStorage.getItem('chats');
-      const savedPrompts = localStorage.getItem('prompts');
-      if (savedChats) chats = JSON.parse(savedChats);
-      if (savedPrompts) prompts = JSON.parse(savedPrompts);
+      try {
+        const savedChats = localStorage.getItem('chats');
+        const savedPrompts = localStorage.getItem('prompts');
+        if (savedChats) chats = JSON.parse(savedChats);
+        if (savedPrompts) prompts = JSON.parse(savedPrompts);
+      } catch (e) {
+        console.error('Error loading data:', e);
+      }
     }
 
-    // Save data to localStorage
     function saveChats() {
       localStorage.setItem('chats', JSON.stringify(chats));
     }
@@ -677,7 +678,6 @@
       localStorage.setItem('prompts', JSON.stringify(prompts));
     }
 
-    // Toggle sidebar on mobile
     function toggleSidebar() {
       sidebar.classList.toggle('active');
       sidebarOverlay.classList.toggle('active');
@@ -687,7 +687,6 @@
     closeSidebar.addEventListener('click', toggleSidebar);
     sidebarOverlay.addEventListener('click', toggleSidebar);
 
-    // Create new chat
     function createNewChat() {
       const newChat = {
         id: Date.now(),
@@ -701,7 +700,6 @@
       renderChats();
     }
 
-    // Select chat
     function selectChat(chatId) {
       currentChatId = chatId;
       renderChats();
@@ -709,7 +707,6 @@
       toggleSidebar();
     }
 
-    // Delete chat
     function deleteChat(chatId) {
       chats = chats.filter(c => c.id !== chatId);
       if (currentChatId === chatId) {
@@ -720,12 +717,11 @@
       renderChats();
     }
 
-    // Render chats
     function renderChats() {
       chatList.innerHTML = chats.map(chat => `
         <div class="chat-item ${chat.id === currentChatId ? 'active' : ''}" onclick="selectChat(${chat.id})">
           <div class="chat-info">
-            <div class="chat-title">${chat.title}</div>
+            <div class="chat-title">${escapeHtml(chat.title)}</div>
             <div class="chat-date">${new Date(chat.createdAt).toLocaleDateString()}</div>
           </div>
           <button class="delete-btn" onclick="event.stopPropagation(); deleteChat(${chat.id})">✕</button>
@@ -733,13 +729,12 @@
       `).join('');
     }
 
-    // Add prompt
     function addPrompt() {
       if (promptTitle.value.trim() && promptContent.value.trim()) {
         const prompt = {
           id: Date.now(),
-          title: promptTitle.value,
-          content: promptContent.value,
+          title: promptTitle.value.trim(),
+          content: promptContent.value.trim(),
         };
         prompts.unshift(prompt);
         promptTitle.value = '';
@@ -749,7 +744,6 @@
       }
     }
 
-    // Delete prompt
     function deletePrompt(promptId) {
       prompts = prompts.filter(p => p.id !== promptId);
       selectedPromptIds.delete(promptId);
@@ -757,7 +751,6 @@
       renderPrompts();
     }
 
-    // Toggle prompt selection
     function togglePrompt(promptId) {
       if (selectedPromptIds.has(promptId)) {
         selectedPromptIds.delete(promptId);
@@ -767,7 +760,6 @@
       renderPrompts();
     }
 
-    // Render prompts
     function renderPrompts() {
       promptsList.innerHTML = prompts.map(p => `
         <div class="prompt-item">
@@ -778,38 +770,53 @@
             onchange="togglePrompt(${p.id})"
           >
           <div class="prompt-info">
-            <div class="prompt-title">${p.title}</div>
-            <div class="prompt-content">${p.content}</div>
+            <div class="prompt-title">${escapeHtml(p.title)}</div>
+            <div class="prompt-content">${escapeHtml(p.content)}</div>
           </div>
           <button class="delete-btn" onclick="deletePrompt(${p.id})">✕</button>
         </div>
       `).join('');
     }
 
-    // Send message
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    function buildApiMessages(chat) {
+      const apiMessages = chat.messages.map(m => ({
+        role: m.role,
+        content: String(m.content || '')
+      }));
+
+      if (selectedPromptIds.size > 0 && apiMessages.length > 0) {
+        const selectedPromptTexts = Array.from(selectedPromptIds)
+          .map(id => prompts.find(p => p.id === id)?.content)
+          .filter(Boolean)
+          .join('\n\n');
+
+        if (selectedPromptTexts) {
+          const lastIndex = apiMessages.length - 1;
+          if (apiMessages[lastIndex].role === 'user') {
+            apiMessages[lastIndex].content = selectedPromptTexts + '\n\n' + apiMessages[lastIndex].content;
+          }
+        }
+      }
+
+      return apiMessages;
+    }
+
     async function sendMessage(e) {
       e.preventDefault();
       
-      // Auto-create chat if none exists
       if (!currentChatId) {
         createNewChat();
         return;
       }
       
-      if (!messageInput.value.trim()) return;
-
-      let finalMessage = messageInput.value;
-      
-      // Add selected prompts
-      if (selectedPromptIds.size > 0) {
-        const selectedPromptTexts = Array.from(selectedPromptIds)
-          .map(id => prompts.find(p => p.id === id)?.content)
-          .filter(Boolean)
-          .join('\n\n');
-        if (selectedPromptTexts) {
-          finalMessage = selectedPromptTexts + '\n\n' + finalMessage;
-        }
-      }
+      const messageText = messageInput.value.trim();
+      if (!messageText) return;
 
       const chat = chats.find(c => c.id === currentChatId);
       if (!chat) return;
@@ -817,7 +824,7 @@
       const userMessage = {
         id: Date.now(),
         role: 'user',
-        content: finalMessage,
+        content: messageText,
       };
 
       chat.messages.push(userMessage);
@@ -827,36 +834,26 @@
       saveChats();
 
       try {
-        if (typeof window.puter !== 'undefined') {
-          // Build conversation context from all previous messages
-          const conversationHistory = chat.messages
-            .slice(0, -1) // Exclude the current user message we just added
-            .map(m => {
-              const role = m.role === 'user' ? 'User' : 'Assistant';
-              return `${role}: ${m.content}`;
-            })
-            .join('\n\n');
-          
-          const contextMessage = conversationHistory 
-            ? conversationHistory + '\n\nUser: ' + finalMessage
-            : finalMessage;
-
-          const response = await window.puter.ai.chat(contextMessage, { model: modelSelect.value });
-          
-          const aiMessage = {
-            id: Date.now() + 1,
-            role: 'assistant',
-            content: response,
-          };
-
-          chat.messages.push(aiMessage);
-          chat.title = finalMessage.slice(0, 50) || 'New Chat';
-          saveChats();
-          renderMessages();
-          renderChats();
-        } else {
+        if (typeof window.puter === 'undefined' || !window.puter.ai) {
           alert('Puter.js not loaded');
+          return;
         }
+
+        const apiMessages = buildApiMessages(chat);
+
+        const response = await window.puter.ai.chat(apiMessages, { model: modelSelect.value });
+
+        const aiMessage = {
+          id: Date.now() + 1,
+          role: 'assistant',
+          content: typeof response === 'string' ? response : response?.message?.content || JSON.stringify(response),
+        };
+
+        chat.messages.push(aiMessage);
+        chat.title = messageText.slice(0, 50) || 'New Chat';
+        saveChats();
+        renderMessages();
+        renderChats();
       } catch (error) {
         console.error('Error:', error);
         alert('Error: ' + error.message);
@@ -865,7 +862,6 @@
       }
     }
 
-    // Delete message
     function editMessage(messageId, newContent) {
       const chat = chats.find(c => c.id === currentChatId);
       if (!chat) return;
@@ -878,7 +874,6 @@
       }
     }
 
-    // Delete message
     function deleteMessage(messageId) {
       const chat = chats.find(c => c.id === currentChatId);
       if (!chat) return;
@@ -888,7 +883,6 @@
       renderMessages();
     }
 
-    // Regenerate message
     async function regenerateMessage(messageId) {
       const chat = chats.find(c => c.id === currentChatId);
       if (!chat) return;
@@ -896,7 +890,6 @@
       const messageIndex = chat.messages.findIndex(m => m.id === messageId);
       if (messageIndex <= 0) return;
 
-      const userMessage = chat.messages[messageIndex - 1];
       chat.messages = chat.messages.slice(0, messageIndex);
       renderMessages();
       saveChats();
@@ -904,60 +897,47 @@
       sendBtn.disabled = true;
 
       try {
-        if (typeof window.puter !== 'undefined') {
-          // Build conversation context
-          const conversationHistory = chat.messages
-            .slice(0, -1)
-            .map(m => {
-              const role = m.role === 'user' ? 'User' : 'Assistant';
-              return `${role}: ${m.content}`;
-            })
-            .join('\n\n');
-          
-          const contextMessage = conversationHistory 
-            ? conversationHistory + '\n\nUser: ' + userMessage.content
-            : userMessage.content;
-
-          const response = await window.puter.ai.chat(contextMessage, { model: modelSelect.value });
-          
-          const aiMessage = {
-            id: Date.now(),
-            role: 'assistant',
-            content: response,
-          };
-
-          chat.messages.push(aiMessage);
-          saveChats();
-          renderMessages();
+        if (typeof window.puter === 'undefined' || !window.puter.ai) {
+          alert('Puter.js not loaded');
+          return;
         }
+
+        const apiMessages = buildApiMessages(chat);
+
+        const response = await window.puter.ai.chat(apiMessages, { model: modelSelect.value });
+
+        const aiMessage = {
+          id: Date.now(),
+          role: 'assistant',
+          content: typeof response === 'string' ? response : response?.message?.content || JSON.stringify(response),
+        };
+
+        chat.messages.push(aiMessage);
+        saveChats();
+        renderMessages();
       } catch (error) {
         console.error('Error:', error);
+        alert('Error: ' + error.message);
       } finally {
         sendBtn.disabled = false;
       }
     }
 
-    // Render messages
     function renderMessages() {
       const chat = chats.find(c => c.id === currentChatId);
-      if (!chat) {
+      if (!chat || chat.messages.length === 0) {
         messagesDiv.innerHTML = '<div class="empty-state">Start a conversation</div>';
         return;
       }
 
-      if (chat.messages.length === 0) {
-        messagesDiv.innerHTML = '<div class="empty-state">Start a conversation</div>';
-        return;
-      }
-
-      messagesDiv.innerHTML = chat.messages.map((msg, idx) => {
-        const content = String(msg.content || '').replace(/'/g, "\\'").replace(/"/g, '\\"');
+      messagesDiv.innerHTML = chat.messages.map((msg) => {
+        const safeContent = JSON.stringify(String(msg.content || ''));
         return `
           <div class="message ${msg.role}">
             <div class="message-content">
-              ${msg.content}
+              ${escapeHtml(String(msg.content || ''))}
               <div class="message-actions">
-                <button class="message-btn" onclick="copyToClipboard('${content}')">Copy</button>
+                <button class="message-btn" onclick="copyToClipboard(${safeContent})">Copy</button>
                 <button class="message-btn" onclick="editMsg(${msg.id})">Edit</button>
                 ${msg.role === 'assistant' ? `<button class="message-btn" onclick="regenerateMessage(${msg.id})">Regenerate</button>` : ''}
                 <button class="message-btn delete" onclick="deleteMessage(${msg.id})">Delete</button>
@@ -967,16 +947,18 @@
         `;
       }).join('');
 
-      // Scroll to bottom
       messagesDiv.scrollTop = messagesDiv.scrollHeight;
     }
 
-    // Copy to clipboard helper
     function copyToClipboard(text) {
-      navigator.clipboard.writeText(text);
+      const content = typeof text === 'string' ? text : String(text);
+      navigator.clipboard.writeText(content).then(() => {
+        console.log('Copied to clipboard');
+      }).catch(err => {
+        console.error('Copy failed:', err);
+      });
     }
 
-    // Edit message helper
     function editMsg(messageId) {
       const chat = chats.find(c => c.id === currentChatId);
       if (!chat) return;
@@ -984,59 +966,95 @@
       if (!message) return;
       
       const newContent = prompt('Edit message:', message.content);
-      if (newContent) {
-        editMessage(messageId, newContent);
+      if (newContent !== null && newContent.trim() !== '') {
+        editMessage(messageId, newContent.trim());
       }
     }
 
-    // Export chat
-    function exportChat() {
-      const chat = chats.find(c => c.id === currentChatId);
-      if (!chat) return;
+    function exportAllData() {
+      const data = {
+        version: 1,
+        exportedAt: new Date().toISOString(),
+        chats: chats,
+        prompts: prompts,
+      };
 
-      const dataStr = JSON.stringify(chat, null, 2);
+      const dataStr = JSON.stringify(data, null, 2);
       const dataBlob = new Blob([dataStr], { type: 'application/json' });
       const url = URL.createObjectURL(dataBlob);
       const link = document.createElement('a');
       link.href = url;
-      link.download = `chat-${Date.now()}.json`;
+      link.download = `ai-chat-export-${new Date().toISOString().slice(0, 10)}.json`;
       link.click();
+      URL.revokeObjectURL(url);
     }
 
-    // Import chat
-    function importChat(e) {
+    function importData(e) {
       const file = e.target.files?.[0];
       if (!file) return;
 
       const reader = new FileReader();
       reader.onload = (event) => {
         try {
-          const importedChat = JSON.parse(event.target.result);
-          importedChat.id = Date.now();
-          chats.unshift(importedChat);
+          const data = JSON.parse(event.target.result);
+
+          if (Array.isArray(data.messages)) {
+            const importedChat = {
+              id: Date.now(),
+              title: data.title || `Imported Chat ${new Date().toLocaleDateString()}`,
+              messages: data.messages,
+              createdAt: data.createdAt || new Date().toISOString(),
+            };
+            chats.unshift(importedChat);
+          } else if (data.chats && Array.isArray(data.chats)) {
+            const importedChats = data.chats.map(chat => ({
+              ...chat,
+              id: Date.now() + Math.floor(Math.random() * 1000000)
+            }));
+            chats = [...importedChats, ...chats];
+
+            if (data.prompts && Array.isArray(data.prompts)) {
+              const existingPrompts = new Set(prompts.map(p => p.content));
+              const newPrompts = data.prompts.filter(p => !existingPrompts.has(p.content));
+              prompts = [...newPrompts, ...prompts];
+            }
+          } else if (Array.isArray(data)) {
+            const importedChats = data.map(chat => ({
+              ...chat,
+              id: Date.now() + Math.floor(Math.random() * 1000000)
+            }));
+            chats = [...importedChats, ...chats];
+          } else {
+            alert('Invalid import format. Expected a full export, single chat, or array of chats.');
+            return;
+          }
+
           saveChats();
+          savePrompts();
           renderChats();
+          renderPrompts();
+          alert('Import successful');
         } catch (error) {
-          alert('Error importing chat');
+          console.error('Import error:', error);
+          alert('Error importing data: ' + error.message);
+        } finally {
+          e.target.value = '';
         }
+      };
+      reader.onerror = () => {
+        alert('Error reading file');
+        e.target.value = '';
       };
       reader.readAsText(file);
     }
 
-    // Event listeners
     newChatBtn.addEventListener('click', createNewChat);
     inputForm.addEventListener('submit', sendMessage);
     togglePromptForm.addEventListener('click', () => createPromptForm.classList.toggle('active'));
     addPromptBtn.addEventListener('click', addPrompt);
-    exportBtn.addEventListener('click', exportChat);
-    importBtn.addEventListener('change', importChat);
+    exportBtn.addEventListener('click', exportAllData);
+    importBtn.addEventListener('change', importData);
 
-    // Update export button visibility
-    setInterval(() => {
-      exportBtn.style.display = currentChatId ? 'flex' : 'none';
-    }, 100);
-
-    // Initialize
     loadData();
     renderChats();
     renderPrompts();
