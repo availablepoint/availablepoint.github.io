@@ -986,13 +986,12 @@
       }
 
       messagesDiv.innerHTML = chat.messages.map((msg) => {
-        const safeContent = JSON.stringify(String(msg.content || ''));
         return `
           <div class="message ${msg.role}">
             <div class="message-content">
               <div class="message-text">${escapeHtml(String(msg.content || ''))}</div>
               <div class="message-actions">
-                <button class="message-btn" onclick="copyToClipboard(${safeContent})">Copy</button>
+                <button class="message-btn" onclick="copyMessage(${msg.id})">Copy</button>
                 <button class="message-btn" onclick="editMsg(${msg.id})">Edit</button>
                 ${msg.role === 'assistant' ? `<button class="message-btn" onclick="regenerateMessage(${msg.id})">Regen</button>` : ''}
                 <button class="message-btn delete" onclick="deleteMessage(${msg.id})">Delete</button>
@@ -1005,9 +1004,14 @@
       messagesDiv.scrollTop = messagesDiv.scrollHeight;
     }
 
-    function copyToClipboard(text) {
-      const content = typeof text === 'string' ? text : String(text);
-      navigator.clipboard.writeText(content).then(() => {
+    function copyMessage(messageId) {
+      const chat = chats.find(c => c.id === currentChatId);
+      if (!chat) return;
+      
+      const message = chat.messages.find(m => m.id === messageId);
+      if (!message) return;
+      
+      navigator.clipboard.writeText(message.content).then(() => {
         console.log('Copied to clipboard');
       }).catch(err => {
         console.error('Copy failed:', err);
