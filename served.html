@@ -930,7 +930,6 @@
         role: 'user',
         content: messageText,
         model: modelSelect.value,
-        provider: providerSelect.value,
       };
 
       chat.messages.push(userMessage);
@@ -954,7 +953,6 @@
           role: 'assistant',
           content: extractResponseContent(response),
           model: modelSelect.value,
-          provider: providerSelect.value,
         };
 
         chat.messages.push(aiMessage);
@@ -1019,7 +1017,6 @@
           role: 'assistant',
           content: extractResponseContent(response),
           model: modelSelect.value,
-          provider: providerSelect.value,
         };
 
         chat.messages.push(aiMessage);
@@ -1044,7 +1041,7 @@
         return `
           <div class="message ${msg.role}">
             <div class="message-content">
-              <div class="message-meta">${msg.provider ? msg.provider + ' • ' : ''}${msg.model || 'Unknown'}</div>
+              <div class="message-meta">${msg.model || 'Unknown'}</div>
               <div class="message-text">${escapeHtml(String(msg.content || ''))}</div>
               <div class="message-actions">
                 <button class="message-btn" onclick="copyMessage(${msg.id})">Copy</button>
