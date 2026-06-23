@@ -703,7 +703,6 @@
               <option value="claude-opus-4.1">claude-opus-4.1</option>
               <option value="claude-sonnet-4.5">claude-sonnet-4.5</option>
             </select>
-            </select>
           </div>
           <div class="selector-group">
             <label class="selector-label">TOP Providers</label>
@@ -915,6 +914,29 @@
       return apiMessages;
     }
 
+    function extractResponseContent(response) {
+      // Handle string response
+      if (typeof response === 'string') {
+        return response;
+      }
+
+      // Handle Claude response structure: response.message.content[0].text
+      if (response?.message?.content?.[0]?.text) {
+        return response.message.content[0].text;
+      }
+
+      // Handle alternative structures
+      if (response?.message?.content) {
+        if (Array.isArray(response.message.content)) {
+          return response.message.content.map(c => c.text || String(c)).join('');
+        }
+        return String(response.message.content);
+      }
+
+      // Fallback
+      return JSON.stringify(response);
+    }
+
     async function sendMessage(e) {
       e.preventDefault();
       
@@ -956,7 +978,7 @@
         const aiMessage = {
           id: Date.now() + 1,
           role: 'assistant',
-          content: typeof response === 'string' ? response : response?.message?.content || JSON.stringify(response),
+          content: extractResponseContent(response),
           model: modelSelect.value,
           provider: providerSelect.value,
         };
@@ -1021,7 +1043,7 @@
         const aiMessage = {
           id: Date.now(),
           role: 'assistant',
-          content: typeof response === 'string' ? response : response?.message?.content || JSON.stringify(response),
+          content: extractResponseContent(response),
           model: modelSelect.value,
           provider: providerSelect.value,
         };
