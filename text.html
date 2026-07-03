@@ -19,7 +19,7 @@
     .section.flex-grow { flex: 1; }
     .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem; }
     .section-header span { font-size: 1.25rem; font-weight: 700; text-transform: uppercase; color: #ffffff; letter-spacing: 0.03em; max-height: 3rem; }
-    .section-header button { background: #2563eb; color: white; border: none; width: 1.75rem; height: 1.75rem; border-radius: 0.25rem; cursor: pointer; display: flex; align-items: center; justify-content: center; font-weight: 600; }
+    .section-header button { background: #2563eb; color: white; border: none; width: 1.75rem; height: 1.75rem; border-radius: 0.25rem; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 1.25rem; font-weight: bold; transition: background 0.2s; }
     .section-header button:hover { background: #1d4ed8; }
     .chat-list { display: flex; flex-direction: column; gap: 0.25rem; max-height: 12rem; overflow-y: auto; -webkit-overflow-scrolling: touch; }
     .chat-item { padding: 0.5rem; border-radius: 0.25rem; cursor: pointer; background: #374151; transition: background 0.2s; display: flex; justify-content: space-between; align-items: flex-start; gap: 0.5rem; }
@@ -30,24 +30,34 @@
     .chat-date { color: #9ca3af; font-size: 0.7rem; }
     .delete-btn { background: none; border: none; color: #9ca3af; cursor: pointer; padding: 0.25rem; flex-shrink: 0; }
     .delete-btn:hover { color: #ef4444; }
-    .prompts-section { flex: 1; display: flex; flex-direction: column; overflow: hidden; max-height: 3rem; }
-    .create-prompt, .create-token { background: #374151; border-radius: 0.25rem; padding: 0.5rem; margin-bottom: 0.5rem; display: none; flex-direction: column; gap: 0.25rem; }
-    .create-prompt.active, .create-token.active { display: flex; }
-    .create-prompt input, .create-prompt textarea, .create-token input { background: #1f2937; color: white; border: 1px solid #4b5563; padding: 0.5rem; border-radius: 0.25rem; font-size: 0.75rem; font-family: inherit; }
-    .create-prompt button, .create-token button { background: #2563eb; color: white; border: none; padding: 0.5rem; border-radius: 0.25rem; cursor: pointer; font-size: 0.75rem; }
-    .create-prompt button:hover, .create-token button:hover { background: #1d4ed8; }
-    .prompts-list, .tokens-list { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 0.25rem; -webkit-overflow-scrolling: touch; min-height: 0; }
-    .prompt-item, .token-item { background: #374151; padding: 0.5rem; border-radius: 0.25rem; display: flex; align-items: flex-start; gap: 0.5rem; font-size: 0.75rem; flex-shrink: 0; }
-    .token-empty { color: #9ca3af; font-size: 0.75rem; padding: 0.25rem 0; }
+    .prompts-section { min-height: 3rem; position: relative; overflow: hidden; flex: 0; }
+    .prompts-section.expanded { flex: 1; min-height: auto; }
+    .create-prompt { background: #374151; border-radius: 0.25rem; padding: 0.5rem; margin-bottom: 0.5rem; display: none; flex-direction: column; gap: 0.25rem; }
+    .create-prompt.active { display: flex; }
+    .create-prompt input, .create-prompt textarea { background: #1f2937; color: white; border: 1px solid #4b5563; padding: 0.5rem; border-radius: 0.25rem; font-size: 0.75rem; font-family: inherit; }
+    .create-prompt button { background: #2563eb; color: white; border: none; padding: 0.5rem; border-radius: 0.25rem; cursor: pointer; font-size: 0.75rem; }
+    .create-prompt button:hover { background: #1d4ed8; }
+    .prompts-list { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 0.25rem; -webkit-overflow-scrolling: touch; min-height: 0; }
+    .prompt-item { background: #374151; padding: 0.5rem; border-radius: 0.25rem; display: flex; align-items: flex-start; gap: 0.5rem; font-size: 0.75rem; flex-shrink: 0; }
     .prompt-checkbox { width: 1rem; height: 1rem; cursor: pointer; margin-top: 0.125rem; flex-shrink: 0; }
-    .prompt-info, .token-info { flex: 1; min-width: 0; }
-    .prompt-title, .token-platform { font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .prompt-content, .token-key { color: #9ca3af; font-size: 0.7rem; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
-    .token-key { -webkit-line-clamp: 1; }
+    .prompt-info { flex: 1; min-width: 0; }
+    .prompt-title { font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .prompt-content { color: #9ca3af; font-size: 0.7rem; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+    .create-token { background: #374151; border-radius: 0.25rem; padding: 0.5rem; margin-bottom: 0.5rem; display: none; flex-direction: column; gap: 0.25rem; }
+    .create-token.active { display: flex; }
+    .create-token input { background: #1f2937; color: white; border: 1px solid #4b5563; padding: 0.5rem; border-radius: 0.25rem; font-size: 0.75rem; font-family: inherit; }
+    .create-token button { background: #2563eb; color: white; border: none; padding: 0.5rem; border-radius: 0.25rem; cursor: pointer; font-size: 0.75rem; }
+    .create-token button:hover { background: #1d4ed8; }
+    .tokens-list { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 0.25rem; -webkit-overflow-scrolling: touch; min-height: 0; }
+    .token-item { background: #374151; padding: 0.5rem; border-radius: 0.25rem; display: flex; align-items: flex-start; gap: 0.5rem; font-size: 0.75rem; flex-shrink: 0; }
+    .token-empty { color: #9ca3af; font-size: 0.75rem; padding: 0.25rem 0; }
+    .token-info { flex: 1; min-width: 0; }
+    .token-platform { font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .token-key { color: #9ca3af; font-size: 0.7rem; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; }
     .tokens-section { min-height: 3rem; position: relative; overflow: hidden; flex: 0; }
     .tokens-section.expanded { flex: 1; min-height: auto; }
     .sidebar-actions { border-top: 1px solid #374151; padding: 0.75rem; display: flex; flex-direction: column; gap: 0.5rem; }
-    .sidebar-actions button, .sidebar-actions label { background: #374151; color: white; border: none; padding: 0.5rem; border-radius: 0.25rem; cursor: pointer; font-size: 0.75rem; display: flex; align-items: center; gap: 0.5rem; }
+    .sidebar-actions button, .sidebar-actions label { background: #374151; color: white; border: none; padding: 0.5rem; border-radius: 0.25rem; cursor: pointer; font-size: 0.75rem; display: flex; align-items: center; justify-content: center; gap: 0.5rem; }
     .sidebar-actions button:hover, .sidebar-actions label:hover { background: #4b5563; }
     .main-content { flex: 1; display: flex; flex-direction: column; width: 100%; overflow: hidden; }
     .header { border-bottom: 1px solid #374151; background: #1f2937; padding: 0.75rem; display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; z-index: 20; }
@@ -61,7 +71,7 @@
     .empty-state { display: flex; align-items: center; justify-content: center; height: 100%; background: rgba(0, 0, 0, 0); color: transparent; text-align: center; }
     .message { display: flex; gap: 0.5rem; align-items: flex-end; }
     .message.user { justify-content: flex-end; }
-    .message-content { max-width: min(90%, 48rem); padding: 0.5rem 0.75rem; border-radius: 0.375rem; font-size: 0.875rem; word-wrap: break-word; white-space: pre-wrap; line-height: 1.4; display: flex; flex-direction: column; }
+    .message-content { max-width: min(90%, 48rem); padding: 0.5rem 0.75rem; border-radius: 0.375rem; font-size: 0.875rem; word-wrap: break-word; white-space: pre-wrap; line-height: 1.4; display: flex; flex-direction: column; gap: 0.25rem; }
     .message.assistant .message-content { background: #374151; color: #d1d5db; border-top-left-radius: 0.125rem; }
     .message.user .message-content { background: #2563eb; color: white; border-top-right-radius: 0.125rem; }
     .message-meta { font-size: 0.65rem; opacity: 0.7; margin-bottom: 0.25rem; }
@@ -71,7 +81,7 @@
     .message-btn:hover { background: #6b7280; }
     .message-btn.delete:hover { background: #dc2626; }
     .edit-form { display: flex; flex-direction: column; gap: 0.5rem; }
-    .edit-form textarea { background: #1f2937; color: white; border: 1px solid #374151; padding: 0.5rem; border-radius: 0.25rem; font-family: inherit; font-size: 0.875rem; resize: vertical; min-height: 100px; }
+    .edit-form textarea { background: #1f2937; color: white; border: 1px solid #374151; padding: 0.5rem; border-radius: 0.25rem; font-family: inherit; font-size: 0.875rem; resize: vertical; min-height: 4rem; }
     .edit-buttons { display: flex; gap: 0.5rem; }
     .edit-buttons button { flex: 1; padding: 0.5rem; border: none; border-radius: 0.25rem; cursor: pointer; font-size: 0.75rem; color: white; }
     .edit-buttons .save { background: #16a34a; }
@@ -113,7 +123,7 @@
           </div>
           <div class="chat-list" id="chatList"></div>
         </div>
-        <div class="section flex-grow prompts-section">
+        <div class="section prompts-section" id="promptsSection">
           <div class="section-header">
             <span>Prompts</span>
             <button id="togglePromptForm">+</button>
@@ -125,7 +135,7 @@
           </div>
           <div class="prompts-list" id="promptsList"></div>
         </div>
-        <div class="section tokens-section">
+        <div class="section tokens-section" id="tokensSection">
           <div class="section-header">
             <span>Tokens</span>
             <button id="toggleTokenForm">+</button>
@@ -222,11 +232,13 @@
     const promptContent = document.getElementById('promptContent');
     const addPromptBtn = document.getElementById('addPromptBtn');
     const promptsList = document.getElementById('promptsList');
+    const promptsSection = document.getElementById('promptsSection');
     const toggleTokenForm = document.getElementById('toggleTokenForm');
     const createTokenForm = document.getElementById('createTokenForm');
     const openRouterToken = document.getElementById('openRouterToken');
     const saveTokenBtn = document.getElementById('saveTokenBtn');
     const tokensList = document.getElementById('tokensList');
+    const tokensSection = document.getElementById('tokensSection');
     const exportBtn = document.getElementById('exportBtn');
     const importBtn = document.getElementById('importBtn');
     const inputForm = document.getElementById('inputForm');
@@ -664,10 +676,11 @@
     inputForm.addEventListener('submit', sendMessage);
     togglePromptForm.addEventListener('click', () => {
       createPromptForm.classList.toggle('active');
+      promptsSection.classList.toggle('expanded');
     });
     toggleTokenForm.addEventListener('click', () => {
       createTokenForm.classList.toggle('active');
-      document.querySelector('.tokens-section').classList.toggle('expanded');
+      tokensSection.classList.toggle('expanded');
     });
     
 
