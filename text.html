@@ -31,7 +31,6 @@
     .delete-btn { background: none; border: none; color: #9ca3af; cursor: pointer; padding: 0.25rem; flex-shrink: 0; }
     .delete-btn:hover { color: #ef4444; }
     .prompts-section { flex: 1; display: flex; flex-direction: column; overflow: hidden; max-height: 3rem; }
-    .prompts-section.expanded { flex: 1; max-height: none; }
     .create-prompt, .create-token { background: #374151; border-radius: 0.25rem; padding: 0.5rem; margin-bottom: 0.5rem; display: none; flex-direction: column; gap: 0.25rem; }
     .create-prompt.active, .create-token.active { display: flex; }
     .create-prompt input, .create-prompt textarea, .create-token input { background: #1f2937; color: white; border: 1px solid #4b5563; padding: 0.5rem; border-radius: 0.25rem; font-size: 0.75rem; [...]
@@ -665,7 +664,6 @@
     inputForm.addEventListener('submit', sendMessage);
     togglePromptForm.addEventListener('click', () => {
       createPromptForm.classList.toggle('active');
-      document.querySelector('.prompts-section').classList.toggle('expanded');
     });
     toggleTokenForm.addEventListener('click', () => {
       createTokenForm.classList.toggle('active');
