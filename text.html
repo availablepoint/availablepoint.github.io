@@ -1,1 +1,694 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>AI Chat App</title>
+  <script src="https://js.puter.com/v2/"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; touch-action: manipulation; }
+    html, body { width: 100%; height: 100%; position: fixed; overflow: hidden; -webkit-user-select: none; user-select: none; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif; background: #111827; color: #fff; -webkit-font-smoothing: antialiased; -webkit-tap-highlight-color: transparent; }
+    input, textarea, select, button { -webkit-user-select: text; user-select: text; font-size: 16px; touch-action: manipulation; }
+    .container { display: flex; height: 100vh; width: 100vw; background: #111827; position: fixed; }
+    .sidebar-overlay { display: none; position: fixed; inset: 0; background: rgba(0, 0, 0, 0.5); z-index: 30; }
+    .sidebar-overlay.active { display: block; }
+    .sidebar { width: 16rem; background: #1f2937; border-right: 1px solid #374151; display: flex; flex-direction: column; overflow: hidden; position: relative; z-index: 40; }
+    .sidebar-content { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+    .section { border-bottom: 1px solid #374151; padding: 0.75rem; display: flex; flex-direction: column; overflow: hidden; }
+    .section.flex-grow { flex: 1; }
+    .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem; }
+    .section-header span { font-size: 1.25rem; font-weight: 700; text-transform: uppercase; color: #ffffff; letter-spacing: 0.03em; max-height: 3rem; }
+    .section-header button { background: #2563eb; color: white; border: none; width: 1.75rem; height: 1.75rem; border-radius: 0.25rem; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 1.25rem; font-weight: bold; transition: background 0.2s; }
+    .section-header button:hover { background: #1d4ed8; }
+    .chat-list { display: flex; flex-direction: column; gap: 0.25rem; max-height: 12rem; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+    .chat-item { padding: 0.5rem; border-radius: 0.25rem; cursor: pointer; background: #374151; transition: background 0.2s; display: flex; justify-content: space-between; align-items: flex-start; gap: 0.5rem; }
+    .chat-item:hover { background: #4b5563; }
+    .chat-item.active { background: #2563eb; }
+    .chat-info { flex: 1; min-width: 0; }
+    .chat-title { font-weight: 500; font-size: 0.7rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .chat-date { color: #9ca3af; font-size: 0.7rem; }
+    .delete-btn { background: none; border: none; color: #9ca3af; cursor: pointer; padding: 0.25rem; flex-shrink: 0; }
+    .delete-btn:hover { color: #ef4444; }
+    .prompts-section { min-height: 3rem; position: relative; overflow: hidden; flex: 0; }
+    .prompts-section.expanded { flex: 1; min-height: auto; }
+    .create-prompt { background: #374151; border-radius: 0.25rem; padding: 0.5rem; margin-bottom: 0.5rem; display: none; flex-direction: column; gap: 0.25rem; }
+    .create-prompt.active { display: flex; }
+    .create-prompt input, .create-prompt textarea { background: #1f2937; color: white; border: 1px solid #4b5563; padding: 0.5rem; border-radius: 0.25rem; font-size: 0.75rem; font-family: inherit; }
+    .create-prompt button { background: #2563eb; color: white; border: none; padding: 0.5rem; border-radius: 0.25rem; cursor: pointer; font-size: 0.75rem; }
+    .create-prompt button:hover { background: #1d4ed8; }
+    .prompts-list { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 0.25rem; -webkit-overflow-scrolling: touch; min-height: 0; }
+    .prompt-item { background: #374151; padding: 0.5rem; border-radius: 0.25rem; display: flex; align-items: flex-start; gap: 0.5rem; font-size: 0.75rem; flex-shrink: 0; }
+    .prompt-checkbox { width: 1rem; height: 1rem; cursor: pointer; margin-top: 0.125rem; flex-shrink: 0; }
+    .prompt-info { flex: 1; min-width: 0; }
+    .prompt-title { font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .prompt-content { color: #9ca3af; font-size: 0.7rem; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+    .create-token { background: #374151; border-radius: 0.25rem; padding: 0.5rem; margin-bottom: 0.5rem; display: none; flex-direction: column; gap: 0.25rem; }
+    .create-token.active { display: flex; }
+    .create-token input { background: #1f2937; color: white; border: 1px solid #4b5563; padding: 0.5rem; border-radius: 0.25rem; font-size: 0.75rem; font-family: inherit; }
+    .create-token button { background: #2563eb; color: white; border: none; padding: 0.5rem; border-radius: 0.25rem; cursor: pointer; font-size: 0.75rem; }
+    .create-token button:hover { background: #1d4ed8; }
+    .tokens-list { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 0.25rem; -webkit-overflow-scrolling: touch; min-height: 0; }
+    .token-item { background: #374151; padding: 0.5rem; border-radius: 0.25rem; display: flex; align-items: flex-start; gap: 0.5rem; font-size: 0.75rem; flex-shrink: 0; }
+    .token-empty { color: #9ca3af; font-size: 0.75rem; padding: 0.25rem 0; }
+    .token-info { flex: 1; min-width: 0; }
+    .token-platform { font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .token-key { color: #9ca3af; font-size: 0.7rem; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; }
+    .tokens-section { min-height: 3rem; position: relative; overflow: hidden; flex: 0; }
+    .tokens-section.expanded { flex: 1; min-height: auto; }
+    .sidebar-actions { border-top: 1px solid #374151; padding: 0.75rem; display: flex; flex-direction: column; gap: 0.5rem; }
+    .sidebar-actions button, .sidebar-actions label { background: #374151; color: white; border: none; padding: 0.5rem; border-radius: 0.25rem; cursor: pointer; font-size: 0.75rem; display: flex; align-items: center; justify-content: center; gap: 0.5rem; }
+    .sidebar-actions button:hover, .sidebar-actions label:hover { background: #4b5563; }
+    .main-content { flex: 1; display: flex; flex-direction: column; width: 100%; overflow: hidden; }
+    .header { border-bottom: 1px solid #374151; background: #1f2937; padding: 0.75rem; display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; z-index: 20; }
+    .header-left { display: flex; align-items: center; gap: 0.5rem; }
+    .menu-btn { display: none; background: none; border: none; color: white; cursor: pointer; padding: 0.5rem; }
+    .menu-btn:hover { background: #374151; border-radius: 0.25rem; }
+    .header h1 { font-size: 1.125rem; font-weight: 700; }
+    .header-right { display: flex; gap: 0.5rem; align-items: center; }
+    #providerSelect, #modelSelect { background: #374151; color: white; border: 1px solid #4b5563; padding: 0.5rem; border-radius: 0.25rem; font-size: 0.875rem; }
+    .messages { flex: 1; overflow-y: auto; padding: 0.75rem; display: flex; flex-direction: column; gap: 1rem; padding-bottom: 0.5rem; -webkit-overflow-scrolling: touch; -webkit-user-select: text; user-select: text; }
+    .empty-state { display: flex; align-items: center; justify-content: center; height: 100%; background: rgba(0, 0, 0, 0); color: transparent; text-align: center; }
+    .message { display: flex; gap: 0.5rem; align-items: flex-end; }
+    .message.user { justify-content: flex-end; }
+    .message-content { max-width: min(90%, 48rem); padding: 0.5rem 0.75rem; border-radius: 0.375rem; font-size: 0.875rem; word-wrap: break-word; white-space: pre-wrap; line-height: 1.4; display: flex; flex-direction: column; gap: 0.25rem; }
+    .message.assistant .message-content { background: #374151; color: #d1d5db; border-top-left-radius: 0.125rem; }
+    .message.user .message-content { background: #2563eb; color: white; border-top-right-radius: 0.125rem; }
+    .message-meta { font-size: 0.65rem; opacity: 0.7; margin-bottom: 0.25rem; }
+    .message-text { overflow-wrap: break-word; word-break: break-word; }
+    .message-actions { display: flex; gap: 0.25rem; flex-wrap: wrap; }
+    .message-btn { background: #4b5563; color: white; border: none; padding: 0.25rem 0.5rem; border-radius: 0.25rem; cursor: pointer; font-size: 0.65rem; white-space: nowrap; }
+    .message-btn:hover { background: #6b7280; }
+    .message-btn.delete:hover { background: #dc2626; }
+    .edit-form { display: flex; flex-direction: column; gap: 0.5rem; }
+    .edit-form textarea { background: #1f2937; color: white; border: 1px solid #374151; padding: 0.5rem; border-radius: 0.25rem; font-family: inherit; font-size: 0.875rem; resize: vertical; min-height: 4rem; }
+    .edit-buttons { display: flex; gap: 0.5rem; }
+    .edit-buttons button { flex: 1; padding: 0.5rem; border: none; border-radius: 0.25rem; cursor: pointer; font-size: 0.75rem; color: white; }
+    .edit-buttons .save { background: #16a34a; }
+    .edit-buttons .save:hover { background: #15803d; }
+    .edit-buttons .cancel { background: #4b5563; }
+    .edit-buttons .cancel:hover { background: #6b7280; }
+    .input-area { border-top: 1px solid #374151; background: #1f2937; padding: 0.75rem; flex-shrink: 0; z-index: 10; }
+    .input-form { display: flex; gap: 0.5rem; }
+    .input-form input { flex: 1; background: #374151; color: white; border: 1px solid #4b5563; padding: 0.5rem; border-radius: 0.25rem; font-size: 0.875rem; font-family: inherit; touch-action: manipulation; }
+    .input-form input:focus { outline: none; border-color: #2563eb; }
+    .input-form input:disabled { opacity: 0.5; }
+    .input-form button { background: #2563eb; color: white; border: none; padding: 0.5rem 1rem; border-radius: 0.25rem; cursor: pointer; font-size: 0.875rem; font-weight: 600; flex-shrink: 0; }
+    .input-form button:hover:not(:disabled) { background: #1d4ed8; }
+    .input-form button:disabled { opacity: 0.5; }
+    /* Mobile */
+    @media (max-width: 768px) {
+      .sidebar { position: fixed; width: 16rem; height: 100vh; transform: translateX(-100%); transition: transform 0.3s; z-index: 40; }
+      .sidebar.active { transform: translateX(0); }
+      .menu-btn { display: block; }
+      .section-header span { font-size: 1.125rem; }
+      .message-content { max-width: 90%; }
+      .chat-list { max-height: 8rem; }
+      .message-actions { display: none; }
+      .message-content:active .message-actions, .message-content:hover .message-actions { display: flex; }
+      .header-right { gap: 0.5rem; }
+      #providerSelect, #modelSelect { padding: 0.375rem; font-size: 0.75rem; max-width: 5rem;}
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+    <div class="sidebar" id="sidebar">
+      <div class="sidebar-content">
+        <div class="section">
+          <div class="section-header">
+            <span>Chats</span>
+            <button id="newChatBtn">+</button>
+          </div>
+          <div class="chat-list" id="chatList"></div>
+        </div>
+        <div class="section prompts-section" id="promptsSection">
+          <div class="section-header">
+            <span>Prompts</span>
+            <button id="togglePromptForm">+</button>
+          </div>
+          <div class="create-prompt" id="createPromptForm">
+            <input type="text" id="promptTitle" placeholder="Title">
+            <textarea id="promptContent" placeholder="Content"></textarea>
+            <button id="addPromptBtn">Add</button>
+          </div>
+          <div class="prompts-list" id="promptsList"></div>
+        </div>
+        <div class="section tokens-section" id="tokensSection">
+          <div class="section-header">
+            <span>Tokens</span>
+            <button id="toggleTokenForm">+</button>
+          </div>
+          <div class="create-token" id="createTokenForm">
+            <input type="password" id="openRouterToken" placeholder="OpenRouter API Key" autocomplete="off">
+            <button id="saveTokenBtn">Save</button>
+          </div>
+          <div class="tokens-list" id="tokensList"></div>
+        </div>
+      </div>
+      <div class="sidebar-actions">
+        <button id="exportBtn">📥 Export</button>
+        <label>
+          📤 Import
+          <input type="file" accept=".json" id="importBtn" style="display: none;">
+        </label>
+      </div>
+    </div>
+    <div class="main-content">
+      <div class="header">
+        <div class="header-left">
+          <button class="menu-btn" id="menuBtn">☰</button>
+          <h1>AI Chat</h1>
+        </div>
+        <div class="header-right">
+          <select id="providerSelect">
+            <option value="puter">Puter</option>
+            <option value="openrouter">OpenRouter</option>
+          </select>
+          <select id="modelSelect"></select>
+        </div>
+      </div>
+      <div class="messages" id="messages">
+        <div class="empty-state"></div>
+      </div>
+      <div class="input-area">
+        <form class="input-form" id="inputForm">
+          <input type="text" id="messageInput" placeholder="Message..." autocomplete="off">
+          <button type="submit" id="sendBtn">Send</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Use localStorage for persistent storage
+    const memStorage = localStorage;
+
+    const MODELS = {
+      puter: [
+        { value: 'gpt-4o', label: 'gpt-4o' },
+        { value: 'o3-mini', label: 'o3-mini' },
+        { value: 'o4-mini', label: 'o4-mini' },
+        { value: 'gpt-4.1', label: 'gpt-4.1' },
+        { value: 'gpt-3.5-turbo', label: 'gpt-3.5' },
+        { value: 'moonshotai/kimi-k2.6', label: 'kimi-2.6' },
+        { value: 'claude-opus-4.1', label: 'claude-opus-4.1' },
+        { value: 'claude-sonnet-4.5', label: 'claude-sonnet-4.5' },
+ ],
+      openrouter: [
+        { value: 'openai/gpt-4o', label: 'GPT-4o' },
+        { value: 'openai/gpt-4o-mini', label: 'GPT-4o Mini' },
+        { value: 'openai/o3-mini', label: 'o3-mini' },
+        { value: 'openai/o4-mini', label: 'o4-mini' },
+        { value: 'anthropic/claude-opus-4.1', label: 'Claude Opus 4.1' },
+        { value: 'anthropic/claude-sonnet-4.5', label: 'Claude Sonnet 4.5' },
+        { value: 'google/gemini-2.5-pro-preview', label: 'Gemini 2.5 Pro' },
+        { value: 'deepseek/deepseek-chat-v3-0324', label: 'DeepSeek V3' },
+      ]
+    };
+
+    let chats = [];
+    let currentChatId = null;
+    let prompts = [];
+    let selectedPromptIds = new Set();
+    let tokens = {};
+    let currentProvider = 'puter';
+
+    const sidebar = document.getElementById('sidebar');
+    const sidebarOverlay = document.getElementById('sidebarOverlay');
+    const menuBtn = document.getElementById('menuBtn');
+    const newChatBtn = document.getElementById('newChatBtn');
+    const chatList = document.getElementById('chatList');
+    const messageInput = document.getElementById('messageInput');
+    const sendBtn = document.getElementById('sendBtn');
+    const messagesDiv = document.getElementById('messages');
+    const providerSelect = document.getElementById('providerSelect');
+    const modelSelect = document.getElementById('modelSelect');
+    const togglePromptForm = document.getElementById('togglePromptForm');
+    const createPromptForm = document.getElementById('createPromptForm');
+    const promptTitle = document.getElementById('promptTitle');
+    const promptContent = document.getElementById('promptContent');
+    const addPromptBtn = document.getElementById('addPromptBtn');
+    const promptsList = document.getElementById('promptsList');
+    const promptsSection = document.getElementById('promptsSection');
+    const toggleTokenForm = document.getElementById('toggleTokenForm');
+    const createTokenForm = document.getElementById('createTokenForm');
+    const openRouterToken = document.getElementById('openRouterToken');
+    const saveTokenBtn = document.getElementById('saveTokenBtn');
+    const tokensList = document.getElementById('tokensList');
+    const tokensSection = document.getElementById('tokensSection');
+    const exportBtn = document.getElementById('exportBtn');
+    const importBtn = document.getElementById('importBtn');
+    const inputForm = document.getElementById('inputForm');
+
+    // Block double-tap zoom
+    let lastTouchEnd = 0;
+    document.addEventListener('touchend', (e) => {
+      const now = Date.now();
+      if (now - lastTouchEnd <= 300) {
+        e.preventDefault();
+      }
+      lastTouchEnd = now;
+    }, false);
+
+    function loadData() {
+      try {
+        const savedChats = memStorage.getItem('chats');
+        const savedPrompts = memStorage.getItem('prompts');
+        const savedTokens = memStorage.getItem('tokens');
+        if (savedChats) chats = JSON.parse(savedChats);
+        if (savedPrompts) prompts = JSON.parse(savedPrompts);
+        if (savedTokens) tokens = JSON.parse(savedTokens);
+      } catch (e) {
+        console.error('Error loading data:', e);
+      }
+    }
+
+    function saveChats() { memStorage.setItem('chats', JSON.stringify(chats)); }
+    function savePrompts() { memStorage.setItem('prompts', JSON.stringify(prompts)); }
+    function saveTokens() { memStorage.setItem('tokens', JSON.stringify(tokens)); }
+
+    function toggleSidebar() {
+      sidebar.classList.toggle('active');
+      sidebarOverlay.classList.toggle('active');
+    }
+
+    menuBtn.addEventListener('click', toggleSidebar);
+    sidebarOverlay.addEventListener('click', toggleSidebar);
+
+    function populateModels() {
+      const list = MODELS[currentProvider] || MODELS.puter;
+      modelSelect.innerHTML = list.map(m => `<option value="${m.value}">${m.label}</option>`).join('');
+    }
+
+    providerSelect.addEventListener('change', () => {
+      currentProvider = providerSelect.value;
+      populateModels();
+    });
+
+    function createNewChat() {
+      const newChat = {
+        id: Date.now(),
+        title: `Chat ${new Date().toLocaleDateString()}`,
+        messages: [],
+        createdAt: new Date().toISOString(),
+      };
+      chats.unshift(newChat);
+      selectChat(newChat.id);
+      saveChats();
+      renderChats();
+    }
+
+    function selectChat(chatId) {
+      currentChatId = chatId;
+      renderChats();
+      renderMessages();
+      toggleSidebar();
+    }
+
+    function deleteChat(chatId) {
+      chats = chats.filter(c => c.id !== chatId);
+      if (currentChatId === chatId) {
+        currentChatId = null;
+        messagesDiv.innerHTML = '<div class="empty-state"></div>';
+      }
+      saveChats();
+      renderChats();
+    }
+
+    function renderChats() {
+      chatList.innerHTML = chats.map(chat => `
+        <div class="chat-item ${chat.id === currentChatId ? 'active' : ''}" onclick="selectChat(${chat.id})">
+          <div class="chat-info">
+            <div class="chat-title">${escapeHtml(chat.title)}</div>
+            <div class="chat-date">${new Date(chat.createdAt).toLocaleDateString()}</div>
+          </div>
+          <button class="delete-btn" onclick="event.stopPropagation(); deleteChat(${chat.id})">✕</button>
+        </div>
+      `).join('');
+    }
+
+    function addPrompt() {
+      if (promptTitle.value.trim() && promptContent.value.trim()) {
+        const prompt = {
+          id: Date.now(),
+          title: promptTitle.value.trim(),
+          content: promptContent.value.trim(),
+        };
+        prompts.unshift(prompt);
+        promptTitle.value = '';
+        promptContent.value = '';
+        savePrompts();
+        renderPrompts();
+      }
+    }
+
+    function deletePrompt(promptId) {
+      prompts = prompts.filter(p => p.id !== promptId);
+      selectedPromptIds.delete(promptId);
+      savePrompts();
+      renderPrompts();
+    }
+
+    function togglePrompt(promptId) {
+      if (selectedPromptIds.has(promptId)) {
+        selectedPromptIds.delete(promptId);
+      } else {
+        selectedPromptIds.add(promptId);
+      }
+      renderPrompts();
+    }
+
+    function renderPrompts() {
+      promptsList.innerHTML = prompts.map(p => `
+        <div class="prompt-item">
+          <input type="checkbox" class="prompt-checkbox" ${selectedPromptIds.has(p.id) ? 'checked' : ''} onchange="togglePrompt(${p.id})">
+          <div class="prompt-info">
+            <div class="prompt-title">${escapeHtml(p.title)}</div>
+            <div class="prompt-content">${escapeHtml(p.content)}</div>
+          </div>
+          <button class="delete-btn" onclick="event.preventDefault(); event.stopPropagation(); deletePrompt(${p.id})">✕</button>
+        </div>
+      `).join('');
+    }
+
+    function saveOpenRouterToken() {
+      const key = openRouterToken.value.trim();
+      if (!key) return;
+      tokens.openrouter = key;
+      openRouterToken.value = '';
+      saveTokens();
+      renderTokens();
+    }
+
+    function deleteToken(platform) {
+      delete tokens[platform];
+      saveTokens();
+      renderTokens();
+    }
+
+    function renderTokens() {
+      const platforms = Object.keys(tokens);
+      if (platforms.length === 0) {
+        tokensList.innerHTML = '<div class="token-empty">No tokens saved</div>';
+        return;
+      }
+      tokensList.innerHTML = platforms.map(platform => `
+        <div class="token-item">
+          <div class="token-info">
+            <div class="token-platform">${escapeHtml(platform)}</div>
+            <div class="token-key">${escapeHtml(tokens[platform].slice(0, 8))}•••</div>
+          </div>
+          <button class="delete-btn" onclick="event.preventDefault(); event.stopPropagation(); deleteToken('${platform}')">✕</button>
+        </div>
+      `).join('');
+    }
+
+    function getOpenRouterKey() {
+      if (tokens.openrouter) return tokens.openrouter;
+      const key = prompt('Enter your OpenRouter API key');
+      if (key && key.trim()) {
+        tokens.openrouter = key.trim();
+        saveTokens();
+        renderTokens();
+        return tokens.openrouter;
+      }
+      return null;
+    }
+
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    function buildApiMessages(chat) {
+      const apiMessages = chat.messages.map(m => ({ role: m.role, content: String(m.content || '') }));
+      if (selectedPromptIds.size > 0 && apiMessages.length > 0) {
+        const selectedPromptTexts = Array.from(selectedPromptIds)
+          .map(id => prompts.find(p => p.id === id)?.content)
+          .filter(Boolean)
+          .join('\n\n');
+        if (selectedPromptTexts) {
+          const lastIndex = apiMessages.length - 1;
+          if (apiMessages[lastIndex].role === 'user') {
+            apiMessages[lastIndex].content = selectedPromptTexts + '\n\n' + apiMessages[lastIndex].content;
+          }
+        }
+      }
+      return apiMessages;
+    }
+
+    function extractResponseContent(response) {
+      if (typeof response === 'string') {
+        return response;
+      }
+      if (response?.message?.content?.[0]?.text) {
+        return response.message.content[0].text;
+      }
+      if (response?.message?.content) {
+        if (Array.isArray(response.message.content)) {
+          return response.message.content.map(c => c.text || String(c)).join('');
+        }
+        return String(response.message.content);
+      }
+      return JSON.stringify(response);
+    }
+
+    async function callProvider(apiMessages) {
+      if (currentProvider === 'openrouter') {
+        const key = getOpenRouterKey();
+        if (!key) throw new Error('OpenRouter API key required');
+        const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${key}`,
+            'Content-Type': 'application/json',
+            'HTTP-Referer': location.href,
+            'X-Title': 'AI Chat App'
+          },
+          body: JSON.stringify({ model: modelSelect.value, messages: apiMessages })
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          throw new Error(data.error?.message || 'OpenRouter request failed');
+        }
+        return data.choices?.[0]?.message?.content || '';
+      }
+      // Puter
+      if (typeof window.puter === 'undefined' || !window.puter.ai) {
+        throw new Error('Puter.js not loaded');
+      }
+      const response = await window.puter.ai.chat(apiMessages, { model: modelSelect.value });
+      return extractResponseContent(response);
+    }
+
+    async function sendMessage(e) {
+      e.preventDefault();
+      if (!currentChatId) {
+        createNewChat();
+        return;
+      }
+      const messageText = messageInput.value.trim();
+      if (!messageText) return;
+      const chat = chats.find(c => c.id === currentChatId);
+      if (!chat) return;
+      const userMessage = {
+        id: Date.now(),
+        role: 'user',
+        content: messageText,
+        model: `${currentProvider}/${modelSelect.value}`,
+      };
+      chat.messages.push(userMessage);
+      messageInput.value = '';
+      sendBtn.disabled = true;
+      renderMessages();
+      saveChats();
+      try {
+        const apiMessages = buildApiMessages(chat);
+        const content = await callProvider(apiMessages);
+        const aiMessage = {
+          id: Date.now() + 1,
+          role: 'assistant',
+          content: content,
+          model: `${currentProvider}/${modelSelect.value}`,
+        };
+        chat.messages.push(aiMessage);
+        chat.title = messageText.slice(0, 50) || 'New Chat';
+        saveChats();
+        renderMessages();
+        renderChats();
+      } catch (error) {
+        console.error('Error:', error);
+        alert('Error: ' + error.message);
+      } finally {
+        sendBtn.disabled = false;
+      }
+    }
+
+    function editMessage(messageId, newContent) {
+      const chat = chats.find(c => c.id === currentChatId);
+      if (!chat) return;
+      const message = chat.messages.find(m => m.id === messageId);
+      if (message) {
+        message.content = newContent;
+        saveChats();
+        renderMessages();
+      }
+    }
+
+    function deleteMessage(messageId) {
+      const chat = chats.find(c => c.id === currentChatId);
+      if (!chat) return;
+      chat.messages = chat.messages.filter(m => m.id !== messageId);
+      saveChats();
+      renderMessages();
+    }
+
+    async function regenerateMessage(messageId) {
+      const chat = chats.find(c => c.id === currentChatId);
+      if (!chat) return;
+      const messageIndex = chat.messages.findIndex(m => m.id === messageId);
+      if (messageIndex <= 0) return;
+      chat.messages = chat.messages.slice(0, messageIndex);
+      renderMessages();
+      saveChats();
+      sendBtn.disabled = true;
+      try {
+        const apiMessages = buildApiMessages(chat);
+        const content = await callProvider(apiMessages);
+        const aiMessage = {
+          id: Date.now(),
+          role: 'assistant',
+          content: content,
+          model: `${currentProvider}/${modelSelect.value}`,
+        };
+        chat.messages.push(aiMessage);
+        saveChats();
+        renderMessages();
+      } catch (error) {
+        console.error('Error:', error);
+        alert('Error: ' + error.message);
+      } finally {
+        sendBtn.disabled = false;
+      }
+    }
+
+    function renderMessages() {
+      const chat = chats.find(c => c.id === currentChatId);
+      if (!chat || chat.messages.length === 0) {
+        messagesDiv.innerHTML = '<div class="empty-state"></div>';
+        return;
+      }
+      messagesDiv.innerHTML = chat.messages.map((msg) => {
+        return `
+ <div class="message ${msg.role}">
+            <div class="message-content">
+              <div class="message-meta">${msg.model || 'Unknown'}</div>
+              <div class="message-text">${escapeHtml(String(msg.content || ''))}</div>
+              <div class="message-actions">
+                <button class="message-btn" onclick="copyMessage(${msg.id})">Copy</button>
+                <button class="message-btn" onclick="editMsg(${msg.id})">Edit</button>
+                ${msg.role === 'assistant' ? `<button class="message-btn" onclick="regenerateMessage(${msg.id})">Regen</button>` : ''}
+                <button class="message-btn delete" onclick="deleteMessage(${msg.id})">Delete</button>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+      messagesDiv.scrollTop = messagesDiv.scrollHeight;
+    }
+
+    function copyMessage(messageId) {
+      const chat = chats.find(c => c.id === currentChatId);
+      if (!chat) return;
+      const message = chat.messages.find(m => m.id === messageId);
+      if (!message) return;
+      navigator.clipboard.writeText(message.content).then(() => {
+        console.log('Copied to clipboard');
+      }).catch(err => {
+        console.error('Copy failed:', err);
+      });
+    }
+
+    function editMsg(messageId) {
+      const chat = chats.find(c => c.id === currentChatId);
+      if (!chat) return;
+      const message = chat.messages.find(m => m.id === messageId);
+      if (!message) return;
+      const newContent = prompt('Edit message:', message.content);
+      if (newContent !== null && newContent.trim() !== '') {
+        editMessage(messageId, newContent.trim());
+      }
+    }
+
+    function exportAllData() {
+      const data = {
+        version: 1,
+        exportedAt: new Date().toISOString(),
+        chats: chats,
+        prompts: prompts,
+        tokens: tokens,
+      };
+      const dataStr = JSON.stringify(data, null, 2);
+      const dataBlob = new Blob([dataStr], { type: 'application/json' });
+      const url = URL.createObjectURL(dataBlob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `ai-chat-export-${new Date().toISOString().slice(0, 10)}.json`;
+      link.click();
+      URL.revokeObjectURL(url);
+    }
+
+    function importData(e) {
+      const file = e.target.files?.[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        try {
+          const data = JSON.parse(event.target.result);
+          chats = data.chats || [];
+          prompts = data.prompts || [];
+          tokens = data.tokens || {};
+          saveChats();
+          savePrompts();
+          saveTokens();
+          renderChats();
+          renderPrompts();
+          renderTokens();
+          alert('Data imported successfully');
+        } catch (err) {
+          console.error('Import failed:', err);
+          alert('Failed to import data: ' + err.message);
+ }
+      };
+      reader.readAsText(file);
+      importBtn.value = '';
+    }
+
+    newChatBtn.addEventListener('click', createNewChat);
+    addPromptBtn.addEventListener('click', addPrompt);
+    saveTokenBtn.addEventListener('click', saveOpenRouterToken);
+    exportBtn.addEventListener('click', exportAllData);
+    importBtn.addEventListener('change', importData);
+    inputForm.addEventListener('submit', sendMessage);
+    togglePromptForm.addEventListener('click', () => {
+      createPromptForm.classList.toggle('active');
+      promptsSection.classList.toggle('expanded');
+    });
+    toggleTokenForm.addEventListener('click', () => {
+      createTokenForm.classList.toggle('active');
+      tokensSection.classList.toggle('expanded');
+    });
+    
+
+    loadData();
+    populateModels();
+    renderChats();
+    renderPrompts();
+    renderTokens();
+  </script>
+</body>
+</html>
 
