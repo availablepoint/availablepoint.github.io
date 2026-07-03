@@ -369,7 +369,7 @@
             <div class="prompt-title">${escapeHtml(p.title)}</div>
             <div class="prompt-content">${escapeHtml(p.content)}</div>
           </div>
-          <button class="delete-btn" onclick="deletePrompt(${p.id})">✕</button>
+          <button class="delete-btn" onclick="event.preventDefault(); event.stopPropagation(); deletePrompt(${p.id})">✕</button>
         </div>
       `).join('');
     }
@@ -401,7 +401,7 @@
             <div class="token-platform">${escapeHtml(platform)}</div>
             <div class="token-key">${escapeHtml(tokens[platform].slice(0, 8))}•••</div>
           </div>
-          <button class="delete-btn" onclick="deleteToken('${platform}')">✕</button>
+          <button class="delete-btn" onclick="event.preventDefault(); event.stopPropagation(); deleteToken('${platform}')">✕</button>
         </div>
       `).join('');
     }
