@@ -1,2 +1,2 @@
-# availablepoint.github.io/served.html
-https://availablepoint.github.io/served.html
+# availablepoint.github.io/text.html
+https://availablepoint.github.io/text.html
