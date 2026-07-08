@@ -31,30 +31,32 @@
     .delete-btn:hover { color: #ef4444; }
     .prompts-section { min-height: 3rem; position: relative; overflow: hidden; flex: 0; }
     .prompts-section.expanded { flex: 1; min-height: auto; }
-    .create-prompt { background: #374151; border-radius: 0.25rem; padding: 0.5rem; margin-bottom: 0.5rem; display: none; flex-direction: column; gap: 0.25rem; flex-shrink: 0; }
+    .prompts-scroll { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; min-height: 0; display: flex; flex-direction: column; gap: 0.5rem; }
+    .create-prompt { background: #374151; border-radius: 0.25rem; padding: 0.5rem; display: none; flex-direction: column; gap: 0.25rem; }
     .create-prompt.active { display: flex; }
     .create-prompt input, .create-prompt textarea { background: #1f2937; color: white; border: 1px solid #4b5563; padding: 0.5rem; border-radius: 0.25rem; font-size: 0.75rem; font-family: inherit; }
     .create-prompt button { background: #2563eb; color: white; border: none; padding: 0.5rem; border-radius: 0.25rem; cursor: pointer; font-size: 0.75rem; }
     .create-prompt button:hover { background: #1d4ed8; }
-    .prompts-list { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 0.25rem; -webkit-overflow-scrolling: touch; min-height: 0; }
+    .prompts-list { display: flex; flex-direction: column; gap: 0.25rem; }
     .prompt-item { background: #374151; padding: 0.5rem; border-radius: 0.25rem; display: flex; align-items: flex-start; gap: 0.5rem; font-size: 0.75rem; flex-shrink: 0; }
     .prompt-checkbox { width: 1rem; height: 1rem; cursor: pointer; margin-top: 0.125rem; flex-shrink: 0; }
     .prompt-info { flex: 1; min-width: 0; }
     .prompt-title { font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .prompt-content { color: #9ca3af; font-size: 0.7rem; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
-    .create-token { background: #374151; border-radius: 0.25rem; padding: 0.5rem; margin-bottom: 0.5rem; display: none; flex-direction: column; gap: 0.25rem; flex-shrink: 0; }
+    .create-token { background: #374151; border-radius: 0.25rem; padding: 0.5rem; display: none; flex-direction: column; gap: 0.25rem; }
     .create-token.active { display: flex; }
     .create-token input { background: #1f2937; color: white; border: 1px solid #4b5563; padding: 0.5rem; border-radius: 0.25rem; font-size: 0.75rem; font-family: inherit; }
     .create-token button { background: #2563eb; color: white; border: none; padding: 0.5rem; border-radius: 0.25rem; cursor: pointer; font-size: 0.75rem; }
     .create-token button:hover { background: #1d4ed8; }
-    .tokens-list { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 0.25rem; -webkit-overflow-scrolling: touch; min-height: 0; }
+    .tokens-section { min-height: 3rem; position: relative; overflow: hidden; flex: 0; }
+    .tokens-section.expanded { flex: 1; min-height: auto; }
+    .tokens-scroll { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; min-height: 0; display: flex; flex-direction: column; gap: 0.5rem; }
+    .tokens-list { display: flex; flex-direction: column; gap: 0.25rem; }
     .token-item { background: #374151; padding: 0.5rem; border-radius: 0.25rem; display: flex; align-items: flex-start; gap: 0.5rem; font-size: 0.75rem; flex-shrink: 0; }
     .token-empty { color: #9ca3af; font-size: 0.75rem; padding: 0.25rem 0; }
     .token-info { flex: 1; min-width: 0; }
     .token-platform { font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .token-key { color: #9ca3af; font-size: 0.7rem; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; }
-    .tokens-section { min-height: 3rem; position: relative; overflow: hidden; flex: 0; }
-    .tokens-section.expanded { flex: 1; min-height: auto; }
     .sidebar-actions { border-top: 1px solid #374151; padding: 0.75rem; display: flex; flex-direction: column; gap: 0.5rem; flex-shrink: 0; }
     .sidebar-actions button, .sidebar-actions label { background: #374151; color: white; border: none; padding: 0.5rem; border-radius: 0.25rem; cursor: pointer; font-size: 0.75rem; display: flex; align-items: center; justify-content: center; gap: 0.5rem; }
     .sidebar-actions button:hover, .sidebar-actions label:hover { background: #4b5563; }
@@ -126,23 +128,27 @@
             <span>Prompts</span>
             <button id="togglePromptForm">+</button>
           </div>
-          <div class="create-prompt" id="createPromptForm">
-            <input type="text" id="promptTitle" placeholder="Title">
-            <textarea id="promptContent" placeholder="Content"></textarea>
-            <button id="addPromptBtn">Add</button>
+          <div class="prompts-scroll" id="promptsScroll">
+            <div class="create-prompt" id="createPromptForm">
+              <input type="text" id="promptTitle" placeholder="Title">
+              <textarea id="promptContent" placeholder="Content"></textarea>
+              <button id="addPromptBtn">Add</button>
+            </div>
+            <div class="prompts-list" id="promptsList"></div>
           </div>
-          <div class="prompts-list" id="promptsList"></div>
         </div>
         <div class="section tokens-section" id="tokensSection">
           <div class="section-header">
             <span>Tokens</span>
             <button id="toggleTokenForm">+</button>
           </div>
-          <div class="create-token" id="createTokenForm">
-            <input type="password" id="openRouterToken" placeholder="OpenRouter API Key" autocomplete="off">
-            <button id="saveTokenBtn">Save</button>
+          <div class="tokens-scroll" id="tokensScroll">
+            <div class="create-token" id="createTokenForm">
+              <input type="password" id="openRouterToken" placeholder="OpenRouter API Key" autocomplete="off">
+              <button id="saveTokenBtn">Save</button>
+            </div>
+            <div class="tokens-list" id="tokensList"></div>
           </div>
-          <div class="tokens-list" id="tokensList"></div>
         </div>
       </div>
       <div class="sidebar-actions">
@@ -228,12 +234,14 @@
     const addPromptBtn = document.getElementById('addPromptBtn');
     const promptsList = document.getElementById('promptsList');
     const promptsSection = document.getElementById('promptsSection');
+    const promptsScroll = document.getElementById('promptsScroll');
     const toggleTokenForm = document.getElementById('toggleTokenForm');
     const createTokenForm = document.getElementById('createTokenForm');
     const openRouterToken = document.getElementById('openRouterToken');
     const saveTokenBtn = document.getElementById('saveTokenBtn');
     const tokensList = document.getElementById('tokensList');
     const tokensSection = document.getElementById('tokensSection');
+    const tokensScroll = document.getElementById('tokensScroll');
     const exportBtn = document.getElementById('exportBtn');
     const importBtn = document.getElementById('importBtn');
     const inputForm = document.getElementById('inputForm');
@@ -338,6 +346,7 @@
         createPromptForm.classList.add('active');
         savePrompts();
         renderPrompts();
+        promptsScroll.scrollTop = promptsScroll.scrollHeight;
       }
     }
 
