@@ -45,7 +45,7 @@
     .prompt-content { color: #9ca3af; font-size: 0.7rem; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
     .create-token { background: #374151; border-radius: 0.25rem; padding: 0.5rem; display: none; flex-direction: column; gap: 0.25rem; }
     .create-token.active { display: flex; }
-    .create-token input { background: #1f2937; color: white; border: 1px solid #4b5563; padding: 0.5rem; border-radius: 0.25rem; font-size: 0.75rem; font-family: inherit; }
+    .create-token input, .create-token select { background: #1f2937; color: white; border: 1px solid #4b5563; padding: 0.5rem; border-radius: 0.25rem; font-size: 0.75rem; font-family: inherit; }
     .create-token button { background: #2563eb; color: white; border: none; padding: 0.5rem; border-radius: 0.25rem; cursor: pointer; font-size: 0.75rem; }
     .create-token button:hover { background: #1d4ed8; }
     .tokens-section { min-height: 3rem; position: relative; overflow: hidden; flex: 0; }
@@ -56,7 +56,7 @@
     .token-empty { color: #9ca3af; font-size: 0.75rem; padding: 0.25rem 0; }
     .token-info { flex: 1; min-width: 0; }
     .token-platform { font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .token-key { color: #9ca3af; font-size: 0.7rem; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; }
+    .token-key { color: #9ca3af; font-size: 0.7rem; word-break: break-all; padding: 0.25rem 0; }
     .sidebar-actions { border-top: 1px solid #374151; padding: 0.75rem; display: flex; flex-direction: column; gap: 0.5rem; flex-shrink: 0; }
     .sidebar-actions button, .sidebar-actions label { background: #374151; color: white; border: none; padding: 0.5rem; border-radius: 0.25rem; cursor: pointer; font-size: 0.75rem; display: flex; align-items: center; justify-content: center; gap: 0.5rem; }
     .sidebar-actions button:hover, .sidebar-actions label:hover { background: #4b5563; }
@@ -144,7 +144,11 @@
           </div>
           <div class="tokens-scroll" id="tokensScroll">
             <div class="create-token" id="createTokenForm">
-              <input type="password" id="openRouterToken" placeholder="OpenRouter API Key" autocomplete="off">
+              <select id="tokenPlatform">
+                <option value="openrouter">OpenRouter</option>
+                <option value="cloudflare">Cloudflare</option>
+              </select>
+              <input type="text" id="tokenInput" placeholder="API Key" autocomplete="off">
               <button id="saveTokenBtn">Save</button>
             </div>
             <div class="tokens-list" id="tokensList"></div>
@@ -169,6 +173,7 @@
           <select id="providerSelect">
             <option value="puter">Puter</option>
             <option value="openrouter">OpenRouter</option>
+            <option value="cloudflare">Cloudflare</option>
           </select>
           <select id="modelSelect"></select>
         </div>
@@ -197,16 +202,6 @@
         { value: 'gpt-3.5-turbo', label: 'gpt-3.5' },
         { value: 'claude-opus-4.1', label: 'claude-opus-4.1' },
         { value: 'claude-sonnet-4.5', label: 'claude-sonnet-4.5' },
- ],
-      openrouter: [
-        { value: 'openai/gpt-4o', label: 'GPT-4o' },
-        { value: 'openai/gpt-4o-mini', label: 'GPT-4o Mini' },
-        { value: 'openai/o3-mini', label: 'o3-mini' },
-        { value: 'openai/o4-mini', label: 'o4-mini' },
-        { value: 'anthropic/claude-opus-4.1', label: 'Claude Opus 4.1' },
-        { value: 'anthropic/claude-sonnet-4.5', label: 'Claude Sonnet 4.5' },
-        { value: 'google/gemini-2.5-pro-preview', label: 'Gemini 2.5 Pro' },
-        { value: 'deepseek/deepseek-chat-v3-0324', label: 'DeepSeek V3' },
       ]
     };
 
@@ -216,6 +211,8 @@
     let selectedPromptIds = new Set();
     let tokens = {};
     let currentProvider = 'puter';
+    let openrouterModels = [];
+    let cloudflareModels = [];
 
     const sidebar = document.getElementById('sidebar');
     const sidebarOverlay = document.getElementById('sidebarOverlay');
@@ -237,7 +234,8 @@
     const promptsScroll = document.getElementById('promptsScroll');
     const toggleTokenForm = document.getElementById('toggleTokenForm');
     const createTokenForm = document.getElementById('createTokenForm');
-    const openRouterToken = document.getElementById('openRouterToken');
+    const tokenPlatform = document.getElementById('tokenPlatform');
+    const tokenInput = document.getElementById('tokenInput');
     const saveTokenBtn = document.getElementById('saveTokenBtn');
     const tokensList = document.getElementById('tokensList');
     const tokensSection = document.getElementById('tokensSection');
@@ -280,13 +278,74 @@
     menuBtn.addEventListener('click', toggleSidebar);
     sidebarOverlay.addEventListener('click', toggleSidebar);
 
+    async function fetchOpenRouterModels() {
+      try {
+        const res = await fetch('https://openrouter.ai/api/v1/models?sort=pricing-low-to-high');
+        const data = await res.json();
+        openrouterModels = (data.data || []).map(m => ({
+          value: m.id,
+          label: `${m.name}`
+        }));
+        if (currentProvider === 'openrouter') populateModels();
+      } catch (e) {
+        console.error('Error fetching OpenRouter models:', e);
+        openrouterModels = [];
+      }
+    }
+
+    async function fetchCloudflareModels() {
+      try {
+        if (!tokens.cloudflare) return;
+        const accountId = await getCloudflareAccountId(tokens.cloudflare);
+        if (!accountId) return;
+        const res = await fetch(`https://api.cloudflare.com/client/v4/accounts/${accountId}/ai/models/search`, {
+          headers: {
+            'Authorization': `Bearer ${tokens.cloudflare}`,
+            'Content-Type': 'application/json'
+          }
+        });
+        const data = await res.json();
+        cloudflareModels = (data.result || []).map(m => ({
+          value: m.name,
+          label: m.name
+        }));
+        if (currentProvider === 'cloudflare') populateModels();
+      } catch (e) {
+        console.error('Error fetching Cloudflare models:', e);
+      }
+    }
+
+    async function getCloudflareAccountId(token) {
+      try {
+        const res = await fetch('https://api.cloudflare.com/client/v4/accounts', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const data = await res.json();
+        return data.result?.[0]?.id;
+      } catch (e) {
+        return null;
+      }
+    }
+
     function populateModels() {
-      const list = MODELS[currentProvider] || MODELS.puter;
+      let list = [];
+      if (currentProvider === 'puter') {
+        list = MODELS.puter;
+      } else if (currentProvider === 'openrouter') {
+        list = openrouterModels.length > 0 ? openrouterModels : [{ value: 'loading', label: 'Loading models...' }];
+      } else if (currentProvider === 'cloudflare') {
+        list = cloudflareModels.length > 0 ? cloudflareModels : [{ value: 'loading', label: 'Loading models...' }];
+      }
       modelSelect.innerHTML = list.map(m => `<option value="${m.value}">${m.label}</option>`).join('');
     }
 
-    providerSelect.addEventListener('change', () => {
+    providerSelect.addEventListener('change', async () => {
       currentProvider = providerSelect.value;
+      if (currentProvider === 'openrouter' && openrouterModels.length === 0) {
+        await fetchOpenRouterModels();
+      } else if (currentProvider === 'cloudflare' && cloudflareModels.length === 0) {
+        await fetchCloudflareModels();
+      }
       populateModels();
     });
 
@@ -379,13 +438,41 @@
       `).join('');
     }
 
-    function saveOpenRouterToken() {
-      const key = openRouterToken.value.trim();
+    async function verifyCloudflareToken(token) {
+      try {
+        const res = await fetch('https://api.cloudflare.com/client/v4/user/tokens/verify', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const data = await res.json();
+        return data.success;
+      } catch (e) {
+        return false;
+      }
+    }
+
+    async function saveToken() {
+      const platform = tokenPlatform.value.trim();
+      const key = tokenInput.value.trim();
       if (!key) return;
-      tokens.openrouter = key;
-      openRouterToken.value = '';
+
+      if (platform === 'cloudflare') {
+        const isValid = await verifyCloudflareToken(key);
+        if (!isValid) {
+          alert('Invalid Cloudflare token');
+          return;
+        }
+      }
+
+      tokens[platform] = key;
+      tokenInput.value = '';
       saveTokens();
       renderTokens();
+
+      if (platform === 'openrouter' && openrouterModels.length === 0) {
+        await fetchOpenRouterModels();
+      } else if (platform === 'cloudflare') {
+        await fetchCloudflareModels();
+      }
     }
 
     function deleteToken(platform) {
@@ -404,23 +491,11 @@
         <div class="token-item">
           <div class="token-info">
             <div class="token-platform">${escapeHtml(platform)}</div>
-            <div class="token-key">${escapeHtml(tokens[platform].slice(0, 8))}•••</div>
+            <div class="token-key">${escapeHtml(tokens[platform])}</div>
           </div>
           <button class="delete-btn" onclick="event.preventDefault(); event.stopPropagation(); deleteToken('${platform}')">✕</button>
         </div>
       `).join('');
-    }
-
-    function getOpenRouterKey() {
-      if (tokens.openrouter) return tokens.openrouter;
-      const key = prompt('Enter your OpenRouter API key');
-      if (key && key.trim()) {
-        tokens.openrouter = key.trim();
-        saveTokens();
-        renderTokens();
-        return tokens.openrouter;
-      }
-      return null;
     }
 
     function escapeHtml(text) {
@@ -464,8 +539,8 @@
 
     async function callProvider(apiMessages) {
       if (currentProvider === 'openrouter') {
-        const key = getOpenRouterKey();
-        if (!key) throw new Error('OpenRouter API key required');
+        const key = tokens.openrouter;
+        if (!key) throw new Error('OpenRouter API key required - add in Tokens section');
         const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
           method: 'POST',
           headers: {
@@ -481,12 +556,32 @@
           throw new Error(data.error?.message || 'OpenRouter request failed');
         }
         return data.choices?.[0]?.message?.content || '';
+      } else if (currentProvider === 'cloudflare') {
+        const key = tokens.cloudflare;
+        if (!key) throw new Error('Cloudflare API token required - add in Tokens section');
+        const accountId = await getCloudflareAccountId(key);
+        if (!accountId) throw new Error('Invalid Cloudflare token');
+        
+        const res = await fetch(`https://api.cloudflare.com/client/v4/accounts/${accountId}/ai/run/${modelSelect.value}`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${key}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ messages: apiMessages })
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          throw new Error(data.errors?.[0]?.message || 'Cloudflare request failed');
+        }
+        return data.result?.response || '';
+      } else {
+        if (typeof window.puter === 'undefined' || !window.puter.ai) {
+          throw new Error('Puter.js not loaded');
+        }
+        const response = await window.puter.ai.chat(apiMessages, { model: modelSelect.value });
+        return extractResponseContent(response);
       }
-      if (typeof window.puter === 'undefined' || !window.puter.ai) {
-        throw new Error('Puter.js not loaded');
-      }
-      const response = await window.puter.ai.chat(apiMessages, { model: modelSelect.value });
-      return extractResponseContent(response);
     }
 
     async function sendMessage(e) {
@@ -589,7 +684,7 @@
       }
       messagesDiv.innerHTML = chat.messages.map((msg) => {
         return `
- <div class="message ${msg.role}">
+          <div class="message ${msg.role}">
             <div class="message-content">
               <div class="message-meta">${msg.model || 'Unknown'}</div>
               <div class="message-text">${escapeHtml(String(msg.content || ''))}</div>
@@ -667,7 +762,7 @@
         } catch (err) {
           console.error('Import failed:', err);
           alert('Failed to import data: ' + err.message);
- }
+        }
       };
       reader.readAsText(file);
       importBtn.value = '';
@@ -675,7 +770,7 @@
 
     newChatBtn.addEventListener('click', createNewChat);
     addPromptBtn.addEventListener('click', addPrompt);
-    saveTokenBtn.addEventListener('click', saveOpenRouterToken);
+    saveTokenBtn.addEventListener('click', saveToken);
     exportBtn.addEventListener('click', exportAllData);
     importBtn.addEventListener('change', importData);
     inputForm.addEventListener('submit', sendMessage);
@@ -689,6 +784,7 @@
     });
 
     loadData();
+    fetchOpenRouterModels();
     populateModels();
     renderChats();
     renderPrompts();
