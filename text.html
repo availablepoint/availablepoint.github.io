@@ -455,12 +455,7 @@
       const key = tokenInput.value.trim();
       if (!key) return;
 
-      if (platform === 'cloudflare') {
-        const isValid = await verifyCloudflareToken(key);
-        if (!isValid) {
-          alert('Invalid Cloudflare token');
-          return;
-        }
+
       }
 
       tokens[platform] = key;
