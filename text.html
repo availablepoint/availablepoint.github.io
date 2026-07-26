@@ -559,7 +559,9 @@
     if (!key) throw new Error('Cloudflare API token required - add in Tokens section');
     const accountId = 'a60b1715357ac7c43f0d39b7f623571c';
     
-    const userMessage = apiMessages[apiMessages.length - 1]?.content || '';
+    const systemMessages = apiMessages.filter(m => m.role === 'system').map(m => m.content).join('\n');
+    const userMessages = apiMessages.filter(m => m.role !== 'system').map(m => `${m.role}: ${m.content}`).join('\n');
+    const prompt = systemMessages ? `${systemMessages}\n\n${userMessages}` : userMessages;
     
     const res = await fetch(`https://api.cloudflare.com/client/v4/accounts/${accountId}/ai/run/${modelSelect.value}`, {
       method: 'POST',
@@ -567,13 +569,14 @@
         'Authorization': `Bearer ${key}`,
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify({ prompt: userMessage })
+      body: JSON.stringify({ prompt: prompt })
     });
     const data = await res.json();
     if (!data.success) {
-      throw new Error(data.errors?.[0]?.message || 'Cloudflare request failed');
+      throw new Error(data.errors?.[0]?.message || JSON.stringify(data));
     }
     return data.result?.response || '';
+  }
   } else {
     if (typeof window.puter === 'undefined' || !window.puter.ai) {
       throw new Error('Puter.js not loaded');
