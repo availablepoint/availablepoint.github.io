@@ -556,26 +556,23 @@
     return data.choices?.[0]?.message?.content || '';
   } else if (currentProvider === 'cloudflare') {
     const key = tokens.cloudflare;
-    if (!key) throw new Error('Cloudflare API token required - add in Tokens section');
+    if (!key) throw new Error('Cloudflare API token required');
     const accountId = 'a60b1715357ac7c43f0d39b7f623571c';
     
-    const systemMessages = apiMessages.filter(m => m.role === 'system').map(m => m.content).join('\n');
-    const userMessages = apiMessages.filter(m => m.role !== 'system').map(m => `${m.role}: ${m.content}`).join('\n');
-    const prompt = systemMessages ? `${systemMessages}\n\n${userMessages}` : userMessages;
-    
-    const res = await fetch(`https://api.cloudflare.com/client/v4/accounts/${accountId}/ai/run/${modelSelect.value}`, {
+    const res = await fetch(`https://cors-anywhere.herokuapp.com/https://api.cloudflare.com/client/v4/accounts/${accountId}/ai/run/${modelSelect.value}`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${key}`,
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify({ prompt: prompt })
+      body: JSON.stringify({ messages: apiMessages })
     });
     const data = await res.json();
     if (!data.success) {
-      throw new Error(data.errors?.[0]?.message || JSON.stringify(data));
+      throw new Error(data.errors?.[0]?.message || 'Cloudflare request failed');
     }
     return data.result?.response || '';
+
   } else {
     if (typeof window.puter === 'undefined' || !window.puter.ai) {
       throw new Error('Puter.js not loaded');
