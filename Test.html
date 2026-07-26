@@ -1,3 +1,4 @@
+```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -10,18 +11,17 @@
     html, body { width: 100%; height: 100%; position: fixed; overflow: hidden; -webkit-user-select: none; user-select: none; }
     body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif; background: #111827; color: #fff; -webkit-font-smoothing: antialiased; -webkit-tap-highlight-color: transparent; }
     input, textarea, select, button { -webkit-user-select: text; user-select: text; font-size: 16px; touch-action: manipulation; }
-    .container { display: flex; height: 100vh; width: 100vw; background: #111827; position: fixed; }
+    .container { display: flex; height: 100vh; width: 100vw; background: #111827; position: fixed; flex-direction: column; }
     .sidebar-overlay { display: none; position: fixed; inset: 0; background: rgba(0, 0, 0, 0.5); z-index: 30; }
     .sidebar-overlay.active { display: block; }
     .sidebar { width: 16rem; background: #1f2937; border-right: 1px solid #374151; display: flex; flex-direction: column; overflow: hidden; position: relative; z-index: 40; }
     .sidebar-content { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
     .section { border-bottom: 1px solid #374151; padding: 0.75rem; display: flex; flex-direction: column; overflow: hidden; }
-    .section.flex-grow { flex: 1; }
-    .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem; }
-    .section-header span { font-size: 1.25rem; font-weight: 700; text-transform: uppercase; color: #ffffff; letter-spacing: 0.03em; max-height: 3rem; }
-    .section-header button { background: #2563eb; color: white; border: none; width: 1.75rem; height: 1.75rem; border-radius: 0.25rem; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 1.25rem; font-weight: bold; transition: background 0.2s; }
+    .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem; flex-shrink: 0; }
+    .section-header span { font-size: 1.25rem; font-weight: 700; text-transform: uppercase; color: #ffffff; letter-spacing: 0.03em; }
+    .section-header button { background: #2563eb; color: white; border: none; width: 1.75rem; height: 1.75rem; border-radius: 0.25rem; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 1.25rem; font-weight: bold; transition: background 0.2s; flex-shrink: 0; }
     .section-header button:hover { background: #1d4ed8; }
-    .chat-list { display: flex; flex-direction: column; gap: 0.25rem; max-height: 12rem; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+    .chat-list { display: flex; flex-direction: column; gap: 0.25rem; max-height: 12rem; overflow-y: auto; -webkit-overflow-scrolling: touch; flex-shrink: 0; }
     .chat-item { padding: 0.5rem; border-radius: 0.25rem; cursor: pointer; background: #374151; transition: background 0.2s; display: flex; justify-content: space-between; align-items: flex-start; gap: 0.5rem; }
     .chat-item:hover { background: #4b5563; }
     .chat-item.active { background: #2563eb; }
@@ -32,34 +32,36 @@
     .delete-btn:hover { color: #ef4444; }
     .prompts-section { min-height: 3rem; position: relative; overflow: hidden; flex: 0; }
     .prompts-section.expanded { flex: 1; min-height: auto; }
-    .create-prompt { background: #374151; border-radius: 0.25rem; padding: 0.5rem; margin-bottom: 0.5rem; display: none; flex-direction: column; gap: 0.25rem; }
+    .prompts-scroll { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; min-height: 0; display: flex; flex-direction: column; gap: 0.5rem; }
+    .create-prompt { background: #374151; border-radius: 0.25rem; padding: 0.5rem; display: none; flex-direction: column; gap: 0.25rem; }
     .create-prompt.active { display: flex; }
     .create-prompt input, .create-prompt textarea { background: #1f2937; color: white; border: 1px solid #4b5563; padding: 0.5rem; border-radius: 0.25rem; font-size: 0.75rem; font-family: inherit; }
     .create-prompt button { background: #2563eb; color: white; border: none; padding: 0.5rem; border-radius: 0.25rem; cursor: pointer; font-size: 0.75rem; }
     .create-prompt button:hover { background: #1d4ed8; }
-    .prompts-list { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 0.25rem; -webkit-overflow-scrolling: touch; min-height: 0; }
+    .prompts-list { display: flex; flex-direction: column; gap: 0.25rem; }
     .prompt-item { background: #374151; padding: 0.5rem; border-radius: 0.25rem; display: flex; align-items: flex-start; gap: 0.5rem; font-size: 0.75rem; flex-shrink: 0; }
     .prompt-checkbox { width: 1rem; height: 1rem; cursor: pointer; margin-top: 0.125rem; flex-shrink: 0; }
     .prompt-info { flex: 1; min-width: 0; }
     .prompt-title { font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .prompt-content { color: #9ca3af; font-size: 0.7rem; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
-    .create-token { background: #374151; border-radius: 0.25rem; padding: 0.5rem; margin-bottom: 0.5rem; display: none; flex-direction: column; gap: 0.25rem; }
+    .create-token { background: #374151; border-radius: 0.25rem; padding: 0.5rem; display: none; flex-direction: column; gap: 0.25rem; }
     .create-token.active { display: flex; }
     .create-token input { background: #1f2937; color: white; border: 1px solid #4b5563; padding: 0.5rem; border-radius: 0.25rem; font-size: 0.75rem; font-family: inherit; }
     .create-token button { background: #2563eb; color: white; border: none; padding: 0.5rem; border-radius: 0.25rem; cursor: pointer; font-size: 0.75rem; }
     .create-token button:hover { background: #1d4ed8; }
-    .tokens-list { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 0.25rem; -webkit-overflow-scrolling: touch; min-height: 0; }
+    .tokens-section { min-height: 3rem; position: relative; overflow: hidden; flex: 0; }
+    .tokens-section.expanded { flex: 1; min-height: auto; }
+    .tokens-scroll { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; min-height: 0; display: flex; flex-direction: column; gap: 0.5rem; }
+    .tokens-list { display: flex; flex-direction: column; gap: 0.25rem; }
     .token-item { background: #374151; padding: 0.5rem; border-radius: 0.25rem; display: flex; align-items: flex-start; gap: 0.5rem; font-size: 0.75rem; flex-shrink: 0; }
     .token-empty { color: #9ca3af; font-size: 0.75rem; padding: 0.25rem 0; }
     .token-info { flex: 1; min-width: 0; }
     .token-platform { font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .token-key { color: #9ca3af; font-size: 0.7rem; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; }
-    .tokens-section { min-height: 3rem; position: relative; overflow: hidden; flex: 0; }
-    .tokens-section.expanded { flex: 1; min-height: auto; }
-    .sidebar-actions { border-top: 1px solid #374151; padding: 0.75rem; display: flex; flex-direction: column; gap: 0.5rem; }
+    .sidebar-actions { border-top: 1px solid #374151; padding: 0.75rem; display: flex; flex-direction: column; gap: 0.5rem; flex-shrink: 0; }
     .sidebar-actions button, .sidebar-actions label { background: #374151; color: white; border: none; padding: 0.5rem; border-radius: 0.25rem; cursor: pointer; font-size: 0.75rem; display: flex; align-items: center; justify-content: center; gap: 0.5rem; }
     .sidebar-actions button:hover, .sidebar-actions label:hover { background: #4b5563; }
-    .main-content { flex: 1; display: flex; flex-direction: column; width: 100%; overflow: hidden; }
+    .main-content { flex: 1; display: flex; flex-direction: column; width: 100%; overflow: hidden; min-height: 0; }
     .header { border-bottom: 1px solid #374151; background: #1f2937; padding: 0.75rem; display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; z-index: 20; }
     .header-left { display: flex; align-items: center; gap: 0.5rem; }
     .menu-btn { display: none; background: none; border: none; color: white; cursor: pointer; padding: 0.5rem; }
@@ -67,7 +69,7 @@
     .header h1 { font-size: 1.125rem; font-weight: 700; }
     .header-right { display: flex; gap: 0.5rem; align-items: center; }
     #providerSelect, #modelSelect { background: #374151; color: white; border: 1px solid #4b5563; padding: 0.5rem; border-radius: 0.25rem; font-size: 0.875rem; }
-    .messages { flex: 1; overflow-y: auto; padding: 0.75rem; display: flex; flex-direction: column; gap: 1rem; padding-bottom: 0.5rem; -webkit-overflow-scrolling: touch; -webkit-user-select: text; user-select: text; }
+    .messages { flex: 1; overflow-y: auto; padding: 0.75rem; display: flex; flex-direction: column; gap: 1rem; padding-bottom: 0.5rem; -webkit-overflow-scrolling: touch; -webkit-user-select: text; user-select: text; min-height: 0; }
     .empty-state { display: flex; align-items: center; justify-content: center; height: 100%; background: rgba(0, 0, 0, 0); color: transparent; text-align: center; }
     .message { display: flex; gap: 0.5rem; align-items: flex-end; }
     .message.user { justify-content: flex-end; }
@@ -96,8 +98,8 @@
     .input-form button { background: #2563eb; color: white; border: none; padding: 0.5rem 1rem; border-radius: 0.25rem; cursor: pointer; font-size: 0.875rem; font-weight: 600; flex-shrink: 0; }
     .input-form button:hover:not(:disabled) { background: #1d4ed8; }
     .input-form button:disabled { opacity: 0.5; }
-    /* Mobile */
     @media (max-width: 768px) {
+      .container { flex-direction: row; }
       .sidebar { position: fixed; width: 16rem; height: 100vh; transform: translateX(-100%); transition: transform 0.3s; z-index: 40; }
       .sidebar.active { transform: translateX(0); }
       .menu-btn { display: block; }
@@ -128,23 +130,27 @@
             <span>Prompts</span>
             <button id="togglePromptForm">+</button>
           </div>
-          <div class="create-prompt" id="createPromptForm">
-            <input type="text" id="promptTitle" placeholder="Title">
-            <textarea id="promptContent" placeholder="Content"></textarea>
-            <button id="addPromptBtn">Add</button>
+          <div class="prompts-scroll" id="promptsScroll">
+            <div class="create-prompt" id="createPromptForm">
+              <input type="text" id="promptTitle" placeholder="Title">
+              <textarea id="promptContent" placeholder="Content"></textarea>
+              <button id="addPromptBtn">Add</button>
+            </div>
+            <div class="prompts-list" id="promptsList"></div>
           </div>
-          <div class="prompts-list" id="promptsList"></div>
         </div>
         <div class="section tokens-section" id="tokensSection">
           <div class="section-header">
             <span>Tokens</span>
             <button id="toggleTokenForm">+</button>
           </div>
-          <div class="create-token" id="createTokenForm">
-            <input type="password" id="openRouterToken" placeholder="OpenRouter API Key" autocomplete="off">
-            <button id="saveTokenBtn">Save</button>
+          <div class="tokens-scroll" id="tokensScroll">
+            <div class="create-token" id="createTokenForm">
+              <input type="password" id="openRouterToken" placeholder="OpenRouter API Key" autocomplete="off">
+              <button id="saveTokenBtn">Save</button>
+            </div>
+            <div class="tokens-list" id="tokensList"></div>
           </div>
-          <div class="tokens-list" id="tokensList"></div>
         </div>
       </div>
       <div class="sidebar-actions">
@@ -182,7 +188,6 @@
   </div>
 
   <script>
-    // Use localStorage for persistent storage
     const memStorage = localStorage;
 
     const MODELS = {
@@ -192,7 +197,6 @@
         { value: 'o4-mini', label: 'o4-mini' },
         { value: 'gpt-4.1', label: 'gpt-4.1' },
         { value: 'gpt-3.5-turbo', label: 'gpt-3.5' },
-        { value: 'kimi-2.7', label: 'kimi-2.7' },
         { value: 'claude-opus-4.1', label: 'claude-opus-4.1' },
         { value: 'claude-sonnet-4.5', label: 'claude-sonnet-4.5' },
  ],
@@ -232,17 +236,18 @@
     const addPromptBtn = document.getElementById('addPromptBtn');
     const promptsList = document.getElementById('promptsList');
     const promptsSection = document.getElementById('promptsSection');
+    const promptsScroll = document.getElementById('promptsScroll');
     const toggleTokenForm = document.getElementById('toggleTokenForm');
     const createTokenForm = document.getElementById('createTokenForm');
     const openRouterToken = document.getElementById('openRouterToken');
     const saveTokenBtn = document.getElementById('saveTokenBtn');
     const tokensList = document.getElementById('tokensList');
     const tokensSection = document.getElementById('tokensSection');
+    const tokensScroll = document.getElementById('tokensScroll');
     const exportBtn = document.getElementById('exportBtn');
     const importBtn = document.getElementById('importBtn');
     const inputForm = document.getElementById('inputForm');
 
-    // Block double-tap zoom
     let lastTouchEnd = 0;
     document.addEventListener('touchend', (e) => {
       const now = Date.now();
@@ -339,8 +344,11 @@
         prompts.unshift(prompt);
         promptTitle.value = '';
         promptContent.value = '';
+        promptsSection.classList.add('expanded');
+        createPromptForm.classList.add('active');
         savePrompts();
         renderPrompts();
+        promptsScroll.scrollTop = promptsScroll.scrollHeight;
       }
     }
 
@@ -476,7 +484,6 @@
         }
         return data.choices?.[0]?.message?.content || '';
       }
-      // Puter
       if (typeof window.puter === 'undefined' || !window.puter.ai) {
         throw new Error('Puter.js not loaded');
       }
@@ -539,6 +546,7 @@
     }
 
     function deleteMessage(messageId) {
+      if (!confirm('Delete this message?')) return;
       const chat = chats.find(c => c.id === currentChatId);
       if (!chat) return;
       chat.messages = chat.messages.filter(m => m.id !== messageId);
@@ -681,7 +689,6 @@
       createTokenForm.classList.toggle('active');
       tokensSection.classList.toggle('expanded');
     });
-    
 
     loadData();
     populateModels();
@@ -691,3 +698,4 @@
   </script>
 </body>
 </html>
+```;
