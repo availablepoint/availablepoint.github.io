@@ -294,38 +294,41 @@
     }
 
     async function fetchCloudflareModels() {
-      try {
-        if (!tokens.cloudflare) return;
-        const accountId = await getCloudflareAccountId(tokens.cloudflare);
-        if (!accountId) return;
-        const res = await fetch(`https://api.cloudflare.com/client/v4/accounts/${accountId}/ai/models/search`, {
-          headers: {
-            'Authorization': `Bearer ${tokens.cloudflare}`,
-            'Content-Type': 'application/json'
-          }
-        });
-        const data = await res.json();
-        cloudflareModels = (data.result || []).map(m => ({
-          value: m.name,
-          label: m.name
-        }));
-        if (currentProvider === 'cloudflare') populateModels();
-      } catch (e) {
-        console.error('Error fetching Cloudflare models:', e);
+  try {
+    if (!tokens.cloudflare) return;
+    const accountId = 'a60b1715357ac7c43f0d39b7f623571c';
+    const res = await fetch(`https://api.cloudflare.com/client/v4/accounts/${accountId}/ai/models/search`, {
+      headers: {
+        'Authorization': `Bearer ${tokens.cloudflare}`,
+        'Content-Type': 'application/json'
       }
+    });
+    const data = await res.json();
+    if (data.result) {
+      cloudflareModels = data.result.map(m => ({
+        value: m.name,
+        label: m.name
+      }));
+    } else {
+      cloudflareModels = [
+        { value: '@cf/meta/llama-3.1-8b-instruct', label: 'Llama 3.1 8B' },
+        { value: '@cf/meta/llama-3.1-70b-instruct', label: 'Llama 3.1 70B' },
+        { value: '@cf/mistral/mistral-7b-instruct-v0.1', label: 'Mistral 7B' },
+        { value: '@cf/mistral/mistral-large-2407', label: 'Mistral Large' }
+      ];
     }
+    if (currentProvider === 'cloudflare') populateModels();
+  } catch (e) {
+    cloudflareModels = [
+      { value: '@cf/meta/llama-3.1-8b-instruct', label: 'Llama 3.1 8B' },
+      { value: '@cf/meta/llama-3.1-70b-instruct', label: 'Llama 3.1 70B' },
+      { value: '@cf/mistral/mistral-7b-instruct-v0.1', label: 'Mistral 7B' },
+      { value: '@cf/mistral/mistral-large-2407', label: 'Mistral Large' }
+    ];
+  }
+}
 
-    async function getCloudflareAccountId(token) {
-      try {
-        const res = await fetch('https://api.cloudflare.com/client/v4/accounts', {
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
-        const data = await res.json();
-        return data.result?.[0]?.id;
-      } catch (e) {
-        return null;
-      }
-    }
+
 
     function populateModels() {
       let list = [];
@@ -533,51 +536,55 @@
     }
 
     async function callProvider(apiMessages) {
-      if (currentProvider === 'openrouter') {
-        const key = tokens.openrouter;
-        if (!key) throw new Error('OpenRouter API key required - add in Tokens section');
-        const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${key}`,
-            'Content-Type': 'application/json',
-            'HTTP-Referer': location.href,
-            'X-Title': 'AI Chat App'
-          },
-          body: JSON.stringify({ model: modelSelect.value, messages: apiMessages })
-        });
-        const data = await res.json();
-        if (!res.ok) {
-          throw new Error(data.error?.message || 'OpenRouter request failed');
-        }
-        return data.choices?.[0]?.message?.content || '';
-      } else if (currentProvider === 'cloudflare') {
-        const key = tokens.cloudflare;
-        if (!key) throw new Error('Cloudflare API token required - add in Tokens section');
-        const accountId = await getCloudflareAccountId(key);
-        if (!accountId) throw new Error('Invalid Cloudflare token');
-        
-        const res = await fetch(`https://api.cloudflare.com/client/v4/accounts/${accountId}/ai/run/${modelSelect.value}`, {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${key}`,
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({ messages: apiMessages })
-        });
-        const data = await res.json();
-        if (!res.ok) {
-          throw new Error(data.errors?.[0]?.message || 'Cloudflare request failed');
-        }
-        return data.result?.response || '';
-      } else {
-        if (typeof window.puter === 'undefined' || !window.puter.ai) {
-          throw new Error('Puter.js not loaded');
-        }
-        const response = await window.puter.ai.chat(apiMessages, { model: modelSelect.value });
-        return extractResponseContent(response);
-      }
+  if (currentProvider === 'openrouter') {
+    const key = tokens.openrouter;
+    if (!key) throw new Error('OpenRouter API key required - add in Tokens section');
+    const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${key}`,
+        'Content-Type': 'application/json',
+        'HTTP-Referer': location.href,
+        'X-Title': 'AI Chat App'
+      },
+      body: JSON.stringify({ model: modelSelect.value, messages: apiMessages })
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      throw new Error(data.error?.message || 'OpenRouter request failed');
     }
+    return data.choices?.[0]?.message?.content || '';
+  } else if (currentProvider === 'cloudflare') {
+    const key = tokens.cloudflare;
+    if (!key) throw new Error('Cloudflare API token required - add in Tokens section');
+    const accountId = 'a60b1715357ac7c43f0d39b7f623571c';
+    
+    const messages = apiMessages.map(m => ({
+      role: m.role,
+      content: m.content
+    }));
+    
+    const res = await fetch(`https://api.cloudflare.com/client/v4/accounts/${accountId}/ai/run/${modelSelect.value}`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${key}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ messages })
+    });
+    const data = await res.json();
+    if (!res.ok || !data.success) {
+      throw new Error(data.errors?.[0]?.message || data.error?.message || 'Cloudflare request failed');
+    }
+    return data.result?.response || data.result?.text || '';
+  } else {
+    if (typeof window.puter === 'undefined' || !window.puter.ai) {
+      throw new Error('Puter.js not loaded');
+    }
+    const response = await window.puter.ai.chat(apiMessages, { model: modelSelect.value });
+    return extractResponseContent(response);
+  }
+}
 
     async function sendMessage(e) {
       e.preventDefault();
