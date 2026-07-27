@@ -13,7 +13,7 @@
     .container { display: flex; height: 100%; width: 100%; background: #121513; flex-direction: row; }
     .sidebar-overlay { display: none; position: fixed; inset: 0; background: rgba(0, 0, 0, 0.5); z-index: 30; }
     .sidebar-overlay.active { display: block; }
-    .sidebar { width: 16rem; background: #1f2937; border-right: 1px solid #374151; display: flex; flex-direction: column; overflow: hidden; position: relative; z-index: 40; }
+    .sidebar { width: 16rem; background: #121513; border-right: 1px solid #374151; display: flex; flex-direction: column; overflow: hidden; position: relative; z-index: 40; }
     .sidebar-content { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
     .section { border-bottom: 1px solid #374151; padding: 0.75rem; display: flex; flex-direction: column; overflow: hidden; }
     .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem; flex-shrink: 0; }
@@ -92,10 +92,10 @@
     .input-area { border-top: 1px solid #374151; background: #201d1b; padding: 0.75rem; flex-shrink: 0; z-index: 10; }
     .input-form { display: flex; gap: 0.5rem; }
     .input-form input { flex: 1; background: #272221; color: white; border: 1px solid #4b5563; padding: 0.5rem; border-radius: 0.25rem; font-size: 0.875rem; font-family: inherit; touch-action: manipulation; }
-    .input-form input:focus { outline: none; border-color: #2563eb; }
+    .input-form input:focus { outline: none; border-color: #932d1d; }
     .input-form input:disabled { opacity: 0.5; }
     .input-form button { background: #ee3a0d; color: white; border: none; padding: 0.5rem 1rem; border-radius: 0.25rem; cursor: pointer; font-size: 0.875rem; font-weight: 600; flex-shrink: 0; }
-    .input-form button:hover:not(:disabled) { background: #1d4ed8; }
+    .input-form button:hover:not(:disabled) { background: #8e2d06; }
     .input-form button:disabled { opacity: 0.5; }
     @media (max-width: 768px) {
       .sidebar { position: fixed; width: 16rem; height: 100%; transform: translateX(-100%); transition: transform 0.3s; top: 0; left: 0; }
