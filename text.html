@@ -559,7 +559,7 @@
     if (!key) throw new Error('Cloudflare API token required');
     const accountId = 'a60b1715357ac7c43f0d39b7f623571c';
     
-    const res = await fetch(`https://cors-anywhere.herokuapp.com/https://api.cloudflare.com/client/v4/accounts/${accountId}/ai/run/${modelSelect.value}`, {
+    const res = await fetch(`https://corsproxy.io/?https://api.cloudflare.com/client/v4/accounts/${accountId}/ai/run/${modelSelect.value}`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${key}`,
